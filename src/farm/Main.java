@@ -1,11 +1,9 @@
 package farm;
 
-import java.util.List;
-import farm.core.*;
-import farm.inventory.product.data.*;
-
 //Stage 0
 import farm.customer.*;
+
+import java.util.List;
 
 // Stage 1
 //import farm.inventory.product.*;
