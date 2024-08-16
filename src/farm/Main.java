@@ -5,7 +5,7 @@ import farm.core.*;
 import farm.inventory.product.data.*;
 
 //Stage 0
-//import farm.customer.*;
+import farm.customer.*;
 
 // Stage 1
 //import farm.inventory.product.*;
@@ -33,13 +33,13 @@ public class Main {
         // import their packages or uncomment them above.
 
         // -- Stage 0: Completion of AddressBook and Customer at stage
-        //AddressBook addressBook = new AddressBook();
-        //Customer customer = new Customer("Ali", 33651111, "UQ");
-        //addressBook.addCustomer(customer);
-        //for (String name : List.of("James", "Alex", "Lauren")) {
-        //    addressBook.addCustomer(new Customer(name, 1234, "1st Street"));
-        //}
-        //System.out.println(addressBook.getAllRecords());
+        AddressBook addressBook = new AddressBook();
+        Customer customer = new Customer("Ali", 33651111, "UQ");
+        addressBook.addCustomer(customer);
+        for (String name : List.of("James", "Alex", "Lauren")) {
+            addressBook.addCustomer(new Customer(name, 1234, "1st Street"));
+        }
+        System.out.println(addressBook.getAllRecords());
 
         //// -- Stage 1: Products + Transactions
         //System.out.println("\n");
