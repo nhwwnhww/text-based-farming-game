@@ -9,7 +9,7 @@ import farm.inventory.product.data.Quality;
 public class Wool extends Product {
 
     private static final Barcode barcode = Barcode.WOOL;
-    private static final Quality quality = null;
+    private static final Quality quality = Quality.REGULAR;
 
     /**
      * Constructs a new Wool product with the specified barcode and quality.

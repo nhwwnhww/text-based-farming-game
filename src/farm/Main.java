@@ -1,14 +1,15 @@
 package farm;
 
 //Stage 0
+import farm.core.DuplicateCustomerException;
 import farm.customer.*;
 
 import java.util.List;
 
 // Stage 1
-//import farm.inventory.product.*;
-//import farm.sales.transaction.SpecialSaleTransaction;
-//import farm.sales.transaction.Transaction;
+import farm.inventory.product.*;
+import farm.sales.transaction.SpecialSaleTransaction;
+import farm.sales.transaction.Transaction;
 
 // Stage 2 + Stage 3
 //import farm.inventory.*;
@@ -24,8 +25,9 @@ public class Main {
      * Start the farm program.
      * @param args Parameters to the program, currently not supported.
      */
+    @SuppressWarnings("checkstyle:LeftCurly")
     public static void main(String[] args)
-//         throws DuplicateCustomerException              // Stage 1
+         throws DuplicateCustomerException              // Stage 1
     {
         // Note as you complete stages, you will need to
         // import their packages or uncomment them above.
@@ -40,27 +42,27 @@ public class Main {
         System.out.println(addressBook.getAllRecords());
 
         //// -- Stage 1: Products + Transactions
-        //System.out.println("\n");
-        //System.out.println(new Milk(Quality.IRIDIUM));
+        System.out.println("\n");
+        System.out.println(new Milk());
 
-        //Transaction transaction = new Transaction(customer);
-        //for (int i = 0; i < 3; i++) {
-        //    transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
-        //}
-        //transaction.getAssociatedCustomer().getCart().addProduct(new Egg());
-        //transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
-        //transaction.finalise();
-        //System.out.println("\n");
-        //System.out.println(transaction.getReceipt());
-        //transaction = new SpecialSaleTransaction(customer);
-        //for (int i = 0; i < 3; i++) {
-        //    transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
-        //}
-        //transaction.getAssociatedCustomer().getCart().addProduct(new Egg());
-        //transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
-        //transaction.finalise();
-        //System.out.println("\n".repeat(3));
-        //System.out.println(transaction.getReceipt());
+        Transaction transaction = new Transaction(customer);
+        for (int i = 0; i < 3; i++) {
+            transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
+        }
+        transaction.getAssociatedCustomer().getCart().addProduct(new Egg());
+        transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
+        transaction.finalise();
+        System.out.println("\n");
+        System.out.println(transaction.getReceipt());
+        transaction = new SpecialSaleTransaction(customer);
+        for (int i = 0; i < 3; i++) {
+            transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
+        }
+        transaction.getAssociatedCustomer().getCart().addProduct(new Egg());
+        transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
+        transaction.finalise();
+        System.out.println("\n".repeat(3));
+        System.out.println(transaction.getReceipt());
 
         // -- Stage 2 + 3: Combining them together
 

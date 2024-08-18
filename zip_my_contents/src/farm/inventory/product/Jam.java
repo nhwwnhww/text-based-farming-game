@@ -9,7 +9,7 @@ import farm.inventory.product.data.Quality;
 public class Jam extends Product {
 
     private static final Barcode barcode = Barcode.JAM;
-    private static final Quality quality = null;
+    private static final Quality quality = Quality.REGULAR;
 
     /**
      * Constructs a new Jam product with the specified barcode and quality

@@ -9,7 +9,7 @@ import farm.inventory.product.data.Quality;
 public class Milk extends Product {
 
     private static final Barcode barcode = Barcode.MILK;
-    private static final Quality quality = null;
+    private static final Quality quality = Quality.REGULAR;
 
     /**
      * Constructs a new Milk product with the specified barcode and quality
