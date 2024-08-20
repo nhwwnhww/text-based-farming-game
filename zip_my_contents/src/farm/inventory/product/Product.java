@@ -68,7 +68,7 @@ public abstract class Product {
      */
     @Override
     public String toString() {
-        return getDisplayName() + ": " + getBasePrice() + "c " + getQuality();
+        return getDisplayName() + ": " + getBasePrice() + "c *" + getQuality() + "*";
     }
 
     /**

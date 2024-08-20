@@ -2,6 +2,7 @@ package farm.sales.transaction;
 
 import farm.customer.Customer;
 import farm.inventory.product.Product;
+import farm.sales.ReceiptPrinter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
  */
 public class Transaction {
     private final Customer associatedCustomer;
-    private final List<Product> purchases;
+    private List<Product> purchases;
     private boolean finalised;
 
     /**
@@ -49,6 +50,8 @@ public class Transaction {
      */
     public void finalise() {
         this.finalised = true;
+        purchases = associatedCustomer.getCart().getContents();
+        associatedCustomer.getCart().setEmpty();
     }
 
     /**
@@ -57,6 +60,9 @@ public class Transaction {
      * @return A list of products.
      */
     public List<Product> getPurchases() {
+        if (!isFinalised()) {
+            return associatedCustomer.getCart().getContents();
+        }
         return new ArrayList<>(purchases);
     }
 
@@ -66,7 +72,11 @@ public class Transaction {
      * @return The total cost.
      */
     public int getTotal() {
-        return purchases.size();
+        if (!isFinalised()) {
+            return associatedCustomer.getCart().getContents().stream().mapToInt(Product::getBasePrice).sum();
+        }
+        return purchases.stream().mapToInt(Product::getBasePrice).sum();
+
     }
 
     /**
@@ -76,11 +86,31 @@ public class Transaction {
      */
     @Override
     public String toString() {
-        return "Transaction for "
+        if (!isFinalised()) {
+            return "Transaction {Customer: "
+                    + associatedCustomer.getName()
+                    + " | Phone Number: "
+                    + associatedCustomer.getPhoneNumber()
+                    + " | Address: "
+                    + associatedCustomer.getAddress()
+                    + ", Status: "
+                    + (isFinalised() ? "Finalised" : "Active")
+                    + ", Associated Products: "
+                    + associatedCustomer.getCart().getContents()
+                    + "}";
+        }
+        return "Transaction {Customer: "
                 + associatedCustomer.getName()
-                + ": " + purchases.size()
-                + " items, Total: "
-                + getTotal();
+                + " | Phone Number: "
+                + associatedCustomer.getPhoneNumber()
+                + " | Address: "
+                + associatedCustomer.getAddress()
+                + ", Status: "
+                + (isFinalised() ? "Finalised" : "Active")
+                + ", Associated Products: "
+                + purchases
+                + "}";
+
     }
 
     /**
@@ -90,11 +120,29 @@ public class Transaction {
      */
     public String getReceipt() {
         StringBuilder receipt = new StringBuilder();
-        receipt.append("Receipt for ").append(associatedCustomer.getName()).append(":\n");
-        for (Product product : purchases) {
-            receipt.append(product.toString()).append("\n");
+
+        if (!isFinalised()) {
+            return ReceiptPrinter.createActiveReceipt();
         }
-        receipt.append("Total: ").append(getTotal());
-        return receipt.toString();
+
+        //headings
+        List<String> headings = List.of("Item", "Price");
+
+        // Create the list of entries
+        List<List<String>> entries = new ArrayList<>();
+        for (Product product : getPurchases()) {
+            String itemName = product.getDisplayName().toLowerCase();
+            String itemPrice = String.format("$%.2f", product.getBasePrice() / 100.0);
+            entries.add(List.of(itemName, itemPrice));
+        }
+
+        // Calculate the total price
+        String total = String.format("$%.2f", getTotal() / 100.0);
+
+        // Get the customer's name
+        String customerName = getAssociatedCustomer().getName();
+
+        // Generate the formatted receipt using the ReceiptPrinter
+        return ReceiptPrinter.createReceipt(headings, entries, total, customerName);
     }
 }

@@ -3,6 +3,7 @@ package farm.sales.transaction;
 import farm.customer.Customer;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Barcode;
+import farm.sales.ReceiptPrinter;
 
 import java.util.*;
 
@@ -20,6 +21,21 @@ public class CategorisedTransaction extends Transaction {
     public CategorisedTransaction(Customer customer) {
         super(customer);
         this.purchasesByType = new HashMap<>();
+        categorizeProducts(customer);
+    }
+
+    /**
+     * Categorizes the products in the customer's cart by their barcode.
+     *
+     * @param customer The customer whose products are to be categorized.
+     */
+    private void categorizeProducts(Customer customer) {
+        List<Product> purchases = customer.getCart().getContents();
+        for (Product product : purchases) {
+            purchasesByType
+                    .computeIfAbsent(product.getBarcode(), k -> new ArrayList<>())
+                    .add(product);
+        }
     }
 
     /**
@@ -61,4 +77,48 @@ public class CategorisedTransaction extends Transaction {
         List<Product> products = purchasesByType.get(barcode);
         return products == null ? 0 : products.stream().mapToInt(Product::getBasePrice).sum();
     }
+
+    /**
+     * Converts the transaction into a formatted receipt for display.
+     *
+     * @return The styled receipt representation of this transaction.
+     */
+    @Override
+    public String getReceipt() {
+        // If the transaction is not finalized, return an active receipt
+        if (!isFinalised()) {
+            return ReceiptPrinter.createActiveReceipt();
+        }
+
+        // Define the headings as specified
+        List<String> headings = List.of("Item", "Qty", "Price (ea.)", "Subtotal");
+
+        // Create the list of entries
+        List<List<String>> entries = new ArrayList<>();
+        for (Barcode barcode : Barcode.values()) {
+            List<Product> products = getPurchasesByType().get(barcode);
+            if (products != null && !products.isEmpty()) {
+                int quantity = products.size();
+                int pricePerItem = products.getFirst().getBasePrice();
+                int subtotal = getPurchaseSubtotal(barcode);
+
+                String itemName = barcode.getDisplayName().toLowerCase();
+                String qtyString = String.valueOf(quantity);
+                String priceString = String.format("$%.2f", pricePerItem / 100.0);
+                String subtotalString = String.format("$%.2f", subtotal / 100.0);
+
+                entries.add(List.of(itemName, qtyString, priceString, subtotalString));
+            }
+        }
+
+        // Calculate the total price and format it
+        String total = String.format("$%.2f", getTotal() / 100.0);
+
+        // Get the customer's name
+        String customerName = getAssociatedCustomer().getName();
+
+        // Generate the formatted receipt using the ReceiptPrinter
+        return ReceiptPrinter.createReceipt(headings, entries, total, customerName);
+    }
+
 }
