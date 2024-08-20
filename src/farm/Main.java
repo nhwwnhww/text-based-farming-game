@@ -8,6 +8,7 @@ import java.util.List;
 
 // Stage 1
 import farm.inventory.product.*;
+import farm.sales.transaction.CategorisedTransaction;
 import farm.sales.transaction.SpecialSaleTransaction;
 import farm.sales.transaction.Transaction;
 
@@ -54,7 +55,8 @@ public class Main {
         transaction.finalise();
         System.out.println("\n");
         System.out.println(transaction.getReceipt());
-        transaction = new SpecialSaleTransaction(customer);
+
+        transaction = new CategorisedTransaction(customer);
         for (int i = 0; i < 3; i++) {
             transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
         }
@@ -62,7 +64,17 @@ public class Main {
         transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
         transaction.finalise();
         System.out.println("\n".repeat(3));
-        System.out.println(transaction.getTotal());
+        System.out.println(transaction);
+
+//        transaction = new SpecialSaleTransaction(customer);
+//        for (int i = 0; i < 3; i++) {
+//            transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
+//        }
+//        transaction.getAssociatedCustomer().getCart().addProduct(new Egg());
+//        transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
+//        transaction.finalise();
+//        System.out.println("\n".repeat(3));
+//        System.out.println(transaction);
 
         // -- Stage 2 + 3: Combining them together
 

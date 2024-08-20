@@ -73,7 +73,11 @@ public class Transaction {
      */
     public int getTotal() {
         if (!isFinalised()) {
-            return associatedCustomer.getCart().getContents().stream().mapToInt(Product::getBasePrice).sum();
+            return associatedCustomer.getCart()
+                    .getContents()
+                    .stream()
+                    .mapToInt(Product::getBasePrice)
+                    .sum();
         }
         return purchases.stream().mapToInt(Product::getBasePrice).sum();
 

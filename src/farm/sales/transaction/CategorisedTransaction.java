@@ -33,9 +33,10 @@ public class CategorisedTransaction extends Transaction {
         List<Product> purchases = customer.getCart().getContents();
         for (Product product : purchases) {
             purchasesByType
-                    .computeIfAbsent(product.getBarcode(), k -> new ArrayList<>())
-                    .add(product);
+//                    .computeIfAbsent(product.getBarcode(), k -> new ArrayList<>())
+                    .put(product.getBarcode(),new ArrayList<>());
         }
+        System.out.println(purchasesByType);
     }
 
     /**
@@ -59,11 +60,11 @@ public class CategorisedTransaction extends Transaction {
     /**
      * Returns the total quantity of products for a given barcode.
      *
-     * @param barcode The barcode of the product.
+     * @param type The barcode of the product.
      * @return The total quantity of products with the given barcode.
      */
-    public int getPurchaseQuantity(Barcode barcode) {
-        List<Product> products = purchasesByType.get(barcode);
+    public int getPurchaseQuantity(Barcode type) {
+        List<Product> products = purchasesByType.get(type);
         return products == null ? 0 : products.size();
     }
 
