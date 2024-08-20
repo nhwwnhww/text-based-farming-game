@@ -55,7 +55,7 @@ public class Main {
         System.out.println("\n");
         System.out.println(transaction.getReceipt());
         System.out.println("My own test: " + transaction.getAssociatedCustomer().getCart().getContents());
-        System.out.println("---------Special-------");
+        System.out.println("---------Special---------");
         transaction = new SpecialSaleTransaction(customer);
         for (int i = 0; i < 3; i++) {
             transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
