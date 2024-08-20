@@ -9,24 +9,20 @@ import farm.inventory.product.data.Quality;
 public class Milk extends Product {
 
     private static final Barcode barcode = Barcode.MILK;
-    private static final Quality quality = null;
 
     /**
-     * Constructs a new Milk product with the specified barcode and quality
+     * Constructs a new Egg product with the specified barcode and quality.
      */
-    @SuppressWarnings("checkstyle:JavadocMethod")
+    public Milk(Quality quality) {
+        super(barcode, quality != null ? quality : Quality.REGULAR);
+    }
+
+    /**
+     * Constructs a new Egg product with the specified quality.
+     * If no quality is provided, it defaults to regular quality.
+     */
     public Milk() {
-        super(barcode, quality);
+        this(Quality.REGULAR);
     }
 
-    @Override
-    public String getDisplayName() {
-        return "Milk";
-    }
-
-    @Override
-    public int getBasePrice() {
-        // Define the base price for Milk, could vary by quality
-        return 10;
-    }
 }

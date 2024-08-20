@@ -35,11 +35,12 @@ public abstract class Product {
 
     /**
      * Returns the display name of the product.
-     * Subclasses must implement this to provide the specific name of the product.
      *
      * @return The display name of the product.
      */
-    public abstract String getDisplayName();
+    public String getDisplayName() {
+        return barcode.getDisplayName();
+    }
 
     /**
      * Returns the quality of the product.
@@ -56,7 +57,9 @@ public abstract class Product {
      *
      * @return The base price of the product.
      */
-    public abstract int getBasePrice();
+    public int getBasePrice() {
+        return barcode.getBasePrice();
+    }
 
     /**
      * Returns a string representation of the product, including its display name and quality.
@@ -65,7 +68,7 @@ public abstract class Product {
      */
     @Override
     public String toString() {
-        return getDisplayName() + " - " + quality;
+        return getDisplayName() + ": " + getBasePrice() + "c " + getQuality();
     }
 
     /**
@@ -77,8 +80,12 @@ public abstract class Product {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Product product = (Product) o;
         return Objects.equals(barcode, product.barcode) && quality == product.quality;
     }

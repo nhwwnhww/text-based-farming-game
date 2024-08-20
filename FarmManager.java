@@ -78,6 +78,8 @@ public class FarmManager {
 
     /**
      * Adds a single product with corresponding name to the Farm's inventory.
+     * All the products added should be of regular quality.
+     * If the product is added successfully display the product add success message.
      * @param productName the name of the product to add to the farm.
      */
     protected void addToInventory(String productName) { }
@@ -85,6 +87,8 @@ public class FarmManager {
 
     /**
      * Adds a certain number of the given product with corresponding name to the Farm's inventory.
+     * All the products added should be of regular quality.
+     * If the product is added successfully display the product add success message.
      * @param productName the name of the product to add to the farm.
      * @param quantity the amount of the product to add.
      */
@@ -133,16 +137,20 @@ public class FarmManager {
                 case "list" -> {
                     int count = 1;
                     List<Product> stock = farm.getAllStock();
-                    StringBuilder builder = new StringBuilder("{" + stock.getFirst());
-                    for (Product product : stock.subList(1, stock.size())) {
-                        builder.append(",").append("\t\t");
-                        if (count % 4 == 0) {
-                            builder.append("\n");
+                    if (stock.isEmpty()) {
+                        shop.displayMessage("Inventory is empty.");
+                    } else {
+                        StringBuilder builder = new StringBuilder("{" + stock.getFirst());
+                        for (Product product : stock.subList(1, stock.size())) {
+                            builder.append(",").append("\t\t");
+                            if (count % 4 == 0) {
+                                builder.append("\n");
+                            }
+                            builder.append(product.toString());
+                            count++;
                         }
-                        builder.append(product.toString());
-                        count++;
+                        shop.displayMessage(builder.append("}").toString());
                     }
-                    shop.displayMessage(builder.append("}").toString());
                 }
             }
         }
@@ -371,21 +379,23 @@ public class FarmManager {
         if (input.size() == 2) {
             try {
                 Barcode barcode = convertProductName(input.get(1));
-                System.out.printf("""
+                shop.displayMessage(String.format("""
                     |--------------------------
                     |     Stats for all
                     | Total Transactions:  %s
-                    | Average Sale Price:  $%s
+                    | Average Sale Price:  $%.2f
                     |--------------------------
                     |     Stats for %s
                     | Total Products Sold: %s
-                    | Gross Earning        $%s
-                    | Average Discount:    %s
+                    | Gross Earning        $%.2f
+                    | Average Discount:    %.0f`
                     |--------------------------
-                    %n""", history.getTotalTransactionsMade(),
-                        history.getAverageSpendPerVisit(), barcode.getDisplayName(),
-                        history.getTotalProductsSold(barcode), history.getGrossEarnings(barcode),
-                        Math.floor(history.getAverageProductDiscount(barcode))
+                    """, history.getTotalTransactionsMade(),
+                                history.getAverageSpendPerVisit() / 100.0f, barcode.getDisplayName(),
+                                history.getTotalProductsSold(barcode),
+                                history.getGrossEarnings(barcode) / 100.0f,
+                                history.getAverageProductDiscount(barcode)
+                        ).replace("`", "%")
                 );
             } catch (InvalidStockRequestException e) {
                 shop.displayInvalidProductName();
@@ -393,16 +403,16 @@ public class FarmManager {
             return;
         }
 
-        System.out.printf("""
+        shop.displayMessage(String.format("""
             |--------------------------
             |     Stats for all
             | Total Transactions:  %s
-            | Average Sale Price:  $%s
+            | Average Sale Price:  $%.2f
             | Total Products Sold: %s
-            | Gross Earning        $%s
+            | Gross Earning        $%.2f
             |--------------------------
-            %n""", history.getTotalTransactionsMade(), history.getAverageSpendPerVisit(),
-                history.getTotalProductsSold(), history.getGrossEarnings());
+            """, history.getTotalTransactionsMade(), history.getAverageSpendPerVisit() / 100.0f,
+                history.getTotalProductsSold(), history.getGrossEarnings() / 100.0f));
     }
 
     /** Private Helper Methods **/

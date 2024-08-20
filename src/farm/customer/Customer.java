@@ -11,7 +11,7 @@ public class Customer {
     private String name;
     private int phoneNumber;
     private String address;
-    private Cart cart;
+    private final Cart cart;
 
     /**
      * Constructs a new Customer with the specified name, phone number, and address.
@@ -97,7 +97,7 @@ public class Customer {
      */
     @Override
     public String toString() {
-        return "Customer{name='" + name + "', phoneNumber=" + phoneNumber + ", address='" + address;
+        return "Name: " + name + " | Phone Number: " + phoneNumber + " | Address: " + address;
     }
 
     /**

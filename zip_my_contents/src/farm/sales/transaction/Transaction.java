@@ -14,7 +14,6 @@ public class Transaction {
     private final Customer associatedCustomer;
     private final List<Product> purchases;
     private boolean finalised;
-    private int total;
 
     /**
      * Constructs a new Transaction associated with the specified customer.
@@ -23,9 +22,8 @@ public class Transaction {
      */
     public Transaction(Customer customer) {
         this.associatedCustomer = customer;
-        this.purchases = new ArrayList<>();
+        this.purchases = customer.getCart().getContents();
         this.finalised = false;
-        this.total = 0;
     }
 
     /**
@@ -54,21 +52,6 @@ public class Transaction {
     }
 
     /**
-     * Adds a product to the transaction's list of purchases.
-     * This method can only be called if the transaction is not yet finalized.
-     *
-     * @param product The product to be added.
-     * @throws IllegalStateException if the transaction has already been finalized.
-     */
-    public void addProduct(Product product) {
-        if (finalised) {
-            throw new IllegalStateException("Cannot add products to a finalized transaction.");
-        }
-        purchases.add(product);
-        calculateTotal();
-    }
-
-    /**
      * Returns the list of products in this transaction.
      *
      * @return A list of products.
@@ -78,19 +61,12 @@ public class Transaction {
     }
 
     /**
-     * Calculates the total cost of the products in this transaction.
-     */
-    private void calculateTotal() {
-        total = purchases.stream().mapToInt(Product::getBasePrice).sum();
-    }
-
-    /**
      * Returns the total cost of the transaction.
      *
      * @return The total cost.
      */
     public int getTotal() {
-        return total;
+        return purchases.size();
     }
 
     /**
@@ -100,7 +76,11 @@ public class Transaction {
      */
     @Override
     public String toString() {
-        return "Transaction for " + associatedCustomer.getName() + ": " + purchases.size() + " items, Total: " + total;
+        return "Transaction for "
+                + associatedCustomer.getName()
+                + ": " + purchases.size()
+                + " items, Total: "
+                + getTotal();
     }
 
     /**
@@ -112,9 +92,9 @@ public class Transaction {
         StringBuilder receipt = new StringBuilder();
         receipt.append("Receipt for ").append(associatedCustomer.getName()).append(":\n");
         for (Product product : purchases) {
-            receipt.append(product.getDisplayName()).append(" - ").append(product.getBasePrice()).append("\n");
+            receipt.append(product.toString()).append("\n");
         }
-        receipt.append("Total: ").append(total);
+        receipt.append("Total: ").append(getTotal());
         return receipt.toString();
     }
 }

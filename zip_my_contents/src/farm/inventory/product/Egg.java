@@ -9,23 +9,19 @@ import farm.inventory.product.data.Quality;
 public class Egg extends Product {
 
     private static final Barcode barcode = Barcode.EGG;
-    private static final Quality quality = Quality.REGULAR;
 
     /**
      * Constructs a new Egg product with the specified barcode and quality.
      */
+    public Egg(Quality quality) {
+        super(barcode, quality != null ? quality : Quality.REGULAR);
+    }
+
+    /**
+     * Constructs a new Egg product with the specified quality.
+     * If no quality is provided, it defaults to regular quality.
+     */
     public Egg() {
-        super(barcode, quality);
-    }
-
-    @Override
-    public String getDisplayName() {
-        return "Egg";
-    }
-
-    @Override
-    public int getBasePrice() {
-        // Define the base price for Egg, could vary by quality
-        return 5;
+        this(Quality.REGULAR);
     }
 }
