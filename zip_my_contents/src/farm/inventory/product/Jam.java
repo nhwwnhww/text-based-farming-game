@@ -9,23 +9,20 @@ import farm.inventory.product.data.Quality;
 public class Jam extends Product {
 
     private static final Barcode barcode = Barcode.JAM;
-    private static final Quality quality = Quality.REGULAR;
 
     /**
-     * Constructs a new Jam product with the specified barcode and quality
+     * Constructs a new Egg product with the specified barcode and quality.
+     */
+    public Jam(Quality quality) {
+        super(barcode, quality != null ? quality : Quality.REGULAR);
+    }
+
+    /**
+     * Constructs a new Egg product with the specified quality.
+     * If no quality is provided, it defaults to regular quality.
      */
     public Jam() {
-        super(barcode, quality);
+        this(Quality.REGULAR);
     }
 
-    @Override
-    public String getDisplayName() {
-        return "Jam";
-    }
-
-    @Override
-    public int getBasePrice() {
-        // Define the base price for Jam, could vary by quality
-        return 20;
-    }
 }

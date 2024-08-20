@@ -9,23 +9,20 @@ import farm.inventory.product.data.Quality;
 public class Wool extends Product {
 
     private static final Barcode barcode = Barcode.WOOL;
-    private static final Quality quality = null;
 
     /**
-     * Constructs a new Wool product with the specified barcode and quality.
+     * Constructs a new Egg product with the specified barcode and quality.
+     */
+    public Wool(Quality quality) {
+        super(barcode, quality != null ? quality : Quality.REGULAR);
+    }
+
+    /**
+     * Constructs a new Egg product with the specified quality.
+     * If no quality is provided, it defaults to regular quality.
      */
     public Wool() {
-        super(barcode, quality);
+        this(Quality.REGULAR);
     }
 
-    @Override
-    public String getDisplayName() {
-        return "Wool";
-    }
-
-    @Override
-    public int getBasePrice() {
-        // Define the base price for Wool, could vary by quality
-        return 15;
-    }
 }

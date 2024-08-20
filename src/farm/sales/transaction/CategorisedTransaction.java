@@ -10,7 +10,7 @@ import java.util.*;
  * Represents a categorized transaction where products are grouped by their barcode.
  */
 public class CategorisedTransaction extends Transaction {
-    private Map<Barcode, List<Product>> purchasesByType;
+    private final Map<Barcode, List<Product>> purchasesByType;
 
     /**
      * Constructs a new CategorisedTransaction associated with the specified customer.
@@ -20,19 +20,6 @@ public class CategorisedTransaction extends Transaction {
     public CategorisedTransaction(Customer customer) {
         super(customer);
         this.purchasesByType = new HashMap<>();
-    }
-
-    /**
-     * Adds a product to the transaction's list of purchases, categorizing it by its barcode.
-     *
-     * @param product The product to be added.
-     */
-    @Override
-    public void addProduct(Product product) {
-        super.addProduct(product);
-        Barcode barcode = product.getBarcode();
-        purchasesByType.putIfAbsent(barcode, new ArrayList<>());
-        purchasesByType.get(barcode).add(product);
     }
 
     /**

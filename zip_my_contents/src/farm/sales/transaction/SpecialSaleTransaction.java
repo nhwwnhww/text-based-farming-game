@@ -12,7 +12,7 @@ import java.util.Map;
  * Represents a special sale transaction where discounts are applied to certain products.
  */
 public class SpecialSaleTransaction extends Transaction {
-    private Map<Barcode, Integer> discountMap;
+    private final Map<Barcode, Integer> discountMap;
 
     /**
      * Constructs a new SpecialSaleTransaction associated with the specified customer.
@@ -61,27 +61,4 @@ public class SpecialSaleTransaction extends Transaction {
         return totalSaved;
     }
 
-    /**
-     * Adds a product to the transaction's list of purchases, applying any relevant discount.
-     *
-     * @param product The product to be added.
-     */
-    @Override
-    public void addProduct(Product product) {
-        super.addProduct(product);
-        // Apply discount to the total, if applicable
-        int discount = getDiscountAmount(product.getBarcode());
-        int total = getTotal();
-        setTotal(total - discount);
-    }
-
-    /**
-     * Sets the total cost of the transaction.
-     *
-     * @param total The new total cost of the transaction.
-     */
-    private void setTotal(int total) {
-        // This method would adjust the internal total amount, potentially updating a superclass field.
-        // Implement this depending on how the total is stored in the Transaction class.
-    }
 }
