@@ -8,6 +8,7 @@ import java.util.List;
 
 // Stage 1
 import farm.inventory.product.*;
+import farm.inventory.product.data.Barcode;
 import farm.sales.transaction.CategorisedTransaction;
 import farm.sales.transaction.SpecialSaleTransaction;
 import farm.sales.transaction.Transaction;
@@ -56,15 +57,19 @@ public class Main {
         System.out.println("\n");
         System.out.println(transaction.getReceipt());
 
+        System.out.println("------------------------");
         transaction = new CategorisedTransaction(customer);
         for (int i = 0; i < 3; i++) {
             transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
         }
         transaction.getAssociatedCustomer().getCart().addProduct(new Egg());
         transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
+        // Now, test your categorize methods
+        System.out.println("Cart Contents: " + customer.getCart().getContents());
         transaction.finalise();
         System.out.println("\n".repeat(3));
         System.out.println(transaction);
+        System.out.println("--------------------------------");
 
 //        transaction = new SpecialSaleTransaction(customer);
 //        for (int i = 0; i < 3; i++) {

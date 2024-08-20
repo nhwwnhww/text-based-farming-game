@@ -21,22 +21,13 @@ public class CategorisedTransaction extends Transaction {
     public CategorisedTransaction(Customer customer) {
         super(customer);
         this.purchasesByType = new HashMap<>();
-        categorizeProducts(customer);
-    }
-
-    /**
-     * Categorizes the products in the customer's cart by their barcode.
-     *
-     * @param customer The customer whose products are to be categorized.
-     */
-    private void categorizeProducts(Customer customer) {
-        List<Product> purchases = customer.getCart().getContents();
+        List<Product> purchases = this.getPurchases();
         for (Product product : purchases) {
             purchasesByType
-//                    .computeIfAbsent(product.getBarcode(), k -> new ArrayList<>())
-                    .put(product.getBarcode(),new ArrayList<>());
+                    .computeIfAbsent(product.getBarcode(), k -> new ArrayList<>())
+                    .add(product);
         }
-        System.out.println(purchasesByType);
+        System.out.println(this.toString());
     }
 
     /**
