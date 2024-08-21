@@ -3,10 +3,9 @@ package farm.sales.transaction;
 import farm.customer.Customer;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Barcode;
+import farm.sales.ReceiptPrinter;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -76,7 +75,9 @@ public class SpecialSaleTransaction extends CategorisedTransaction {
      */
     @Override
     public int getTotal() {
-        return getPurchasedTypes().stream()
+        Set<Barcode> purchasedTypes = new HashSet<>(getPurchasedTypes());
+
+        return purchasedTypes.stream()
                 .mapToInt(this::getPurchaseSubtotal)
                 .sum();
     }
@@ -87,15 +88,79 @@ public class SpecialSaleTransaction extends CategorisedTransaction {
      * @return The numerical savings from discounts.
      */
     public int getTotalSaved() {
-        return getPurchasedTypes().stream()
+        // Create a snapshot of the keys to avoid concurrent modification issues
+        Set<Barcode> purchasedTypesSnapshot = new HashSet<>(getPurchasedTypes());
+
+        return purchasedTypesSnapshot.stream()
                 .mapToInt(type -> {
-                    int subtotal = getPurchasesByType().get(type).stream()
-                            .mapToInt(Product::getBasePrice)
-                            .sum();
+                    List<Product> products = getPurchasesByType().get(type);
+                    if (products == null || products.isEmpty()) {
+                        return 0;
+                    }
+                    int subtotal = products.stream().mapToInt(Product::getBasePrice).sum();
                     int discountPercentage = getDiscountAmount(type);
                     return subtotal * discountPercentage / 100;
                 })
                 .sum();
+    }
+
+    /**
+     * Converts the transaction into a formatted receipt for display, using the ReceiptPrinter.
+     *
+     * @return The styled receipt representation of this transaction.
+     */
+    @Override
+    public String getReceipt() {
+        if (!isFinalised()) {
+            return ReceiptPrinter.createActiveReceipt();
+        }
+
+        List<String> headings = Arrays.asList("Item", "Qty", "Price (ea.)", "Subtotal");
+        List<List<String>> entries = new ArrayList<>();
+
+        for (Barcode barcode : Barcode.values()) {
+            List<Product> products = getPurchasesByType().get(barcode);
+            if (products != null && !products.isEmpty()) {
+                int quantity = products.size();
+                int pricePerItem = products.getFirst().getBasePrice();
+                int subtotal = products.stream()
+                        .mapToInt(Product::getBasePrice)
+                        .sum();
+                int discountAmount = getDiscountAmount(barcode);
+                int discountedSubtotal = subtotal - (subtotal * discountAmount / 100);
+
+                String itemName = barcode.getDisplayName().toLowerCase();
+                String qtyString = String.valueOf(quantity);
+                String priceString = String.format("$%.2f", pricePerItem / 100.0);
+                String subtotalString = String.format("$%.2f", discountedSubtotal / 100.0);
+
+                entries.add(Arrays.asList(itemName, qtyString, priceString, subtotalString));
+
+                if (discountAmount > 0) {
+                    entries
+                            .add(Collections
+                                    .singletonList(String
+                                            .format("Discount applied! %d%% off %s",
+                                                    discountAmount,
+                                                    itemName)));
+                }
+            }
+        }
+
+        String total = String.format("$%.2f", getTotal() / 100.0);
+
+
+        String customerName = getAssociatedCustomer().getName();
+
+        // Handle the case where no items were purchased
+        if (!entries.isEmpty()) {
+            if (getTotalSaved() > 0) {
+                String savingsMessage = String.format("$%.2f", getTotalSaved() / 100.0);
+                return ReceiptPrinter
+                        .createReceipt(headings, entries, total, customerName, savingsMessage);
+            }
+        }
+        return ReceiptPrinter.createReceipt(headings, entries, total, customerName);
     }
 
     /**
@@ -113,59 +178,18 @@ public class SpecialSaleTransaction extends CategorisedTransaction {
 
         String status = isFinalised() ? "Finalised" : "Active";
 
-        return String.format("Transaction {Customer: %s | Phone Number: %s | Address: %s, Status: %s, Associated Products: [%s], Discounts: %s}",
-                getAssociatedCustomer().getName(),
-                getAssociatedCustomer().getPhoneNumber(),
-                getAssociatedCustomer().getAddress(),
-                status,
-                productsString,
-                discountsString);
-    }
-
-    /**
-     * Converts the transaction into a formatted receipt for display, using the ReceiptPrinter.
-     *
-     * @return The styled receipt representation of this transaction.
-     */
-    @Override
-    public String getReceipt() {
-        StringBuilder receipt = new StringBuilder();
-
-        if (!isFinalised()) {
-            receipt.append("""
-                    ------------------------------------------------
-                    Transaction still active; cannot generate receipt.
-                    ------------------------------------------------""");
-        }
-
-        List<String> receiptLines = getPurchasedTypes().stream()
-                .map(type -> {
-                    List<Product> products = getPurchasesByType().get(type);
-                    int quantity = products.size();
-                    int pricePerItem = products.get(0).getBasePrice();
-                    int subtotal = getPurchaseSubtotal(type);
-
-                    String entry = String.format("%-10s %3d %12.2f %12.2f",
-                            type.getDisplayName(),
-                            quantity,
-                            pricePerItem / 100.0,
-                            subtotal / 100.0);
-
-                    int discountPercentage = getDiscountAmount(type);
-                    if (discountPercentage > 0) {
-                        entry += String.format("\nDiscount applied! %d%% off %s", discountPercentage, type.getDisplayName());
-                    }
-
-                    return entry;
-                })
-                .collect(Collectors.toList());
-
-        String total = String.format("Total: %30.2f", getTotal() / 100.0);
-        String savings = getTotalSaved() > 0
-                ? String.format("***** TOTAL SAVINGS: %.2f *****", getTotalSaved() / 100.0)
-                : null;
-
-        receipt.append(receiptLines).append(total).append(savings).append(getAssociatedCustomer().getName());
-        return String.format("%-45s", receipt);
+        return "Transaction {Customer: "
+                + getAssociatedCustomer().getName()
+                + " | Phone Number: "
+                + getAssociatedCustomer().getPhoneNumber()
+                + " | Address: "
+                + getAssociatedCustomer().getAddress()
+                + ", Status: "
+                + status
+                + ", Associated Products: ["
+                + productsString
+                + "], Discounts: "
+                + discountsString
+                + '}';
     }
 }

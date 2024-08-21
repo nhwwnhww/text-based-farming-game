@@ -37,16 +37,20 @@ public class Transaction {
     }
 
     /**
-     * Returns whether this transaction has been finalized.
+     * Determines if the transaction is finalised (i.e. sale completed) or not.
      *
-     * @return true if the transaction is finalized, false otherwise.
+     * @return true if the transaction is over, else false.
      */
     public boolean isFinalised() {
         return finalised;
     }
 
     /**
-     * Finalizes the transaction, preventing further modifications.
+     * Mark a transaction as finalised and update the transaction's internal state accordingly.
+     * This locks in all pending purchases previously added,
+     * such that they are now treated as final purchases and
+     * no additional modification can be made,
+     * and empties the customer's cart.
      */
     public void finalise() {
         this.finalised = true;
@@ -61,7 +65,8 @@ public class Transaction {
      */
     public List<Product> getPurchases() {
         if (!isFinalised()) {
-            return associatedCustomer.getCart().getContents();
+            System.out.println("transaction not finalised");
+            return new ArrayList<>(associatedCustomer.getCart().getContents());
         }
         return new ArrayList<>(purchases);
     }
