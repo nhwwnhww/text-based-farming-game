@@ -65,7 +65,8 @@ public class Transaction {
      */
     public List<Product> getPurchases() {
         if (!isFinalised()) {
-            return associatedCustomer.getCart().getContents();
+            System.out.println("transaction not finalised");
+            return new ArrayList<>(associatedCustomer.getCart().getContents());
         }
         return new ArrayList<>(purchases);
     }

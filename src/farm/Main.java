@@ -29,8 +29,8 @@ public class Main {
      */
     @SuppressWarnings("checkstyle:LeftCurly")
     public static void main(String[] args)
-         throws DuplicateCustomerException              // Stage 1
-    {
+         throws DuplicateCustomerException {
+        // Stage 1
         // Note as you complete stages, you will need to
         // import their packages or uncomment them above.
 
@@ -57,19 +57,18 @@ public class Main {
         System.out.println("\n");
         System.out.println(transaction.getReceipt());
 
-        System.out.println("------------------------");
         transaction = new CategorisedTransaction(customer);
         for (int i = 0; i < 3; i++) {
             transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
         }
         transaction.getAssociatedCustomer().getCart().addProduct(new Egg());
         transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
-        // Now, test your categorize methods
-        System.out.println("Cart Contents: " + customer.getCart().getContents());
+        System.out.println("-------@@-----------------@@--------");
+        System.out.println(((CategorisedTransaction) transaction).getPurchasesByType());
+        // Now, test your category methods
         transaction.finalise();
         System.out.println("\n".repeat(3));
-        System.out.println(transaction);
-        System.out.println("--------------------------------");
+        System.out.println("-------@@-----------------@@--------");
 
 //        transaction = new SpecialSaleTransaction(customer);
 //        for (int i = 0; i < 3; i++) {
@@ -79,7 +78,6 @@ public class Main {
 //        transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
 //        transaction.finalise();
 //        System.out.println("\n".repeat(3));
-//        System.out.println(transaction);
 
         // -- Stage 2 + 3: Combining them together
 

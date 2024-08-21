@@ -21,13 +21,7 @@ public class CategorisedTransaction extends Transaction {
     public CategorisedTransaction(Customer customer) {
         super(customer);
         this.purchasesByType = new HashMap<>();
-        List<Product> purchases = this.getPurchases();
-        for (Product product : purchases) {
-            purchasesByType
-                    .computeIfAbsent(product.getBarcode(), k -> new ArrayList<>())
-                    .add(product);
-        }
-        System.out.println(this.toString());
+
     }
 
     /**
@@ -36,6 +30,13 @@ public class CategorisedTransaction extends Transaction {
      * @return A set of barcodes.
      */
     public Set<Barcode> getPurchasedTypes() {
+        List<Product> purchases = getPurchases();
+        for (Product product : purchases) {
+            Barcode barcode = product.getBarcode();
+            this.purchasesByType
+                    .computeIfAbsent(barcode, k -> new ArrayList<>())
+                    .add(product);
+        }
         return purchasesByType.keySet();
     }
 
@@ -45,7 +46,9 @@ public class CategorisedTransaction extends Transaction {
      * @return A map of barcodes to lists of products.
      */
     public Map<Barcode, List<Product>> getPurchasesByType() {
+        getPurchasedTypes();
         return new HashMap<>(purchasesByType);
+
     }
 
     /**
@@ -66,8 +69,16 @@ public class CategorisedTransaction extends Transaction {
      * @return The subtotal cost of products with the given barcode.
      */
     public int getPurchaseSubtotal(Barcode barcode) {
+        getPurchasedTypes();
         List<Product> products = purchasesByType.get(barcode);
-        return products == null ? 0 : products.stream().mapToInt(Product::getBasePrice).sum();
+        if (products == null) {
+            return 0;
+        }
+
+        return products
+                .stream()
+                .mapToInt(Product::getBasePrice)
+                .sum();
     }
 
     /**
@@ -87,6 +98,7 @@ public class CategorisedTransaction extends Transaction {
 
         // Create the list of entries
         List<List<String>> entries = new ArrayList<>();
+        getPurchasedTypes();
         for (Barcode barcode : Barcode.values()) {
             List<Product> products = getPurchasesByType().get(barcode);
             if (products != null && !products.isEmpty()) {
