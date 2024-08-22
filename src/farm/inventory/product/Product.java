@@ -9,7 +9,7 @@ import java.util.Objects;
  * Represents an abstract product in the inventory system.
  * This class should be extended by specific product types.
  */
-public class Product {
+public abstract class Product {
     private final Barcode barcode;
     private final Quality quality;
 

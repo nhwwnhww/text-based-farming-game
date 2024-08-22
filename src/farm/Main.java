@@ -13,7 +13,6 @@ import java.util.List;
 import farm.inventory.product.*;
 import farm.inventory.product.data.Barcode;
 import farm.inventory.product.data.Quality;
-import farm.sales.transaction.CategorisedTransaction;
 import farm.sales.transaction.SpecialSaleTransaction;
 import farm.sales.transaction.Transaction;
 

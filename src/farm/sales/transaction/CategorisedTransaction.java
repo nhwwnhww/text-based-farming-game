@@ -58,6 +58,9 @@ public class CategorisedTransaction extends Transaction {
      * @return The total quantity of products with the given barcode.
      */
     public int getPurchaseQuantity(Barcode type) {
+        // Ensure purchasesByType is up to date
+        populatePurchasesByType();
+
         List<Product> products = purchasesByType.get(type);
         return products == null ? 0 : products.size();
     }
@@ -69,7 +72,8 @@ public class CategorisedTransaction extends Transaction {
      * @return The subtotal cost of products with the given barcode.
      */
     public int getPurchaseSubtotal(Barcode barcode) {
-        getPurchasedTypes();
+        // Ensure purchasesByType is up to date
+        populatePurchasesByType();
         List<Product> products = purchasesByType.get(barcode);
         if (products == null) {
             return 0;
@@ -79,6 +83,15 @@ public class CategorisedTransaction extends Transaction {
                 .stream()
                 .mapToInt(Product::getBasePrice)
                 .sum();
+    }
+
+    private void populatePurchasesByType() {
+        if (purchasesByType.isEmpty()) {
+            for (Product product : getPurchases()) {
+                Barcode barcode = product.getBarcode();
+                purchasesByType.computeIfAbsent(barcode, k -> new ArrayList<>()).add(product);
+            }
+        }
     }
 
     /**
