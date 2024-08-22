@@ -1,5 +1,7 @@
 package farm.sales;
 
+import farm.sales.transaction.CategorisedTransaction;
+import farm.sales.transaction.SpecialSaleTransaction;
 import farm.sales.transaction.Transaction;
 import farm.inventory.product.data.Barcode;
 
@@ -11,7 +13,7 @@ import java.util.List;
 /**
  * Constructs a new TransactionHistory object.
  */
-public class TransactionHistory extends Object {
+public class TransactionHistory {
     private final List<Transaction> transactionHistory;
 
     /**
@@ -84,9 +86,8 @@ public class TransactionHistory extends Object {
     public int getGrossEarnings(Barcode type) {
         return transactionHistory
                 .stream()
-                .flatMap(transaction -> (transaction).getPurchasesByType().entrySet().stream())
-                .filter(entry -> entry.getKey().equals(type))
-                .mapToInt(entry -> entry.getValue().stream().mapToInt(Product::getBasePrice).sum())
+                .mapToInt(Transaction::getTotal) // For each transaction,
+                // get its total and sum them up
                 .sum();
     }
 
@@ -118,11 +119,10 @@ public class TransactionHistory extends Object {
      * @return the total number of products sold, for that particular product.
      */
     public int getTotalProductsSold(Barcode type) {
-        return transactionHistory
-                .stream()
-                .flatMap(transaction -> transaction.getPurchasesByType().entrySet().stream())
-                .filter(entry -> entry.getKey().equals(type))
-                .mapToInt(entry -> entry.getValue().size())
+        return transactionHistory.stream()
+                .filter(transaction -> transaction instanceof CategorisedTransaction)
+                .mapToInt(transaction -> ((CategorisedTransaction) transaction)
+                        .getPurchaseQuantity(type))
                 .sum();
     }
 
@@ -207,17 +207,18 @@ public class TransactionHistory extends Object {
      */
     public double getAverageProductDiscount(Barcode type) {
         int totalProductsSold = getTotalProductsSold(type);
-
         if (totalProductsSold == 0) {
             return 0.0;
         }
 
-        int totalDiscount = transactionHistory
-                .stream()
-                .flatMap(transaction -> transaction.getPurchasesByType().entrySet().stream())
+        int totalDiscount = transactionHistory.stream()
+                .filter(transaction -> transaction instanceof SpecialSaleTransaction)
+                .flatMap(transaction -> ((CategorisedTransaction) transaction)
+                        .getPurchasesByType().entrySet().stream())
                 .filter(entry -> entry.getKey().equals(type))
                 .mapToInt(entry -> entry.getValue().stream()
-                        .mapToInt(product -> product.getOriginalPrice() - product.getBasePrice())
+                        .mapToInt(product -> product.getBarcode()
+                                .getBasePrice() - product.getBasePrice())
                         .sum())
                 .sum();
 

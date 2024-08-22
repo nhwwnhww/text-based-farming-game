@@ -1,11 +1,16 @@
 package farm.core;
 
 import farm.customer.Customer;
+import farm.inventory.product.data.Barcode;
+import farm.inventory.product.data.Quality;
 import farm.sales.*;
 import farm.core.ShopFront;
 import farm.sales.transaction.CategorisedTransaction;
 import farm.sales.transaction.SpecialSaleTransaction;
 import farm.sales.transaction.Transaction;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Controller class, coordinating information between the model and view/UI of the program.
@@ -20,7 +25,7 @@ import farm.sales.transaction.Transaction;
  * The class has been implemented in Stage 2, and additional functionalities related to quantities will be introduced in Stage 3.
  * </p>
  */
-public class FarmManager extends Object {
+public class FarmManager {
 
     private final Farm farm;
     private final ShopFront shop;
@@ -56,7 +61,156 @@ public class FarmManager extends Object {
      * Begins the running of the UI and interprets user input to begin the appropriate mode.
      */
     public void run() {
-        // Implementation provided
+        System.out.println("Welcome to the Farm Management System!");
+        boolean running = true;
+
+        while (running) {
+            List<String> command = shop.promptModeSelect();
+
+            switch (command.getFirst()) {
+                case "q":
+                    running = false;
+                    break;
+
+                case "inventory":
+                    handleInventoryMode(shop);
+                    break;
+
+                case "address":
+                    handleAddressBookMode(shop);
+                    break;
+
+                case "sales":
+                    handleSalesMode(shop);
+                    break;
+
+                case "history":
+                    handleHistoryMode(shop);
+                    break;
+
+                default:
+                    shop.displayIncorrectArguments();
+                    break;
+            }
+        }
+
+        System.out.println("Thank you for using the Farm Program!");
+    }
+
+    private void handleInventoryMode(ShopFront shopFront) {
+        boolean inInventoryMode = true;
+
+        while (inInventoryMode) {
+            List<String> command = shopFront.promptInventoryCmd();
+
+            switch (command.getFirst()) {
+                case "q":
+                    inInventoryMode = false;
+                    break;
+
+                case "add":
+                    // Handle adding a product to the inventory
+                    break;
+
+                case "list":
+                    // Handle listing all products in the inventory
+                    break;
+
+                default:
+                    shopFront.displayIncorrectArguments();
+                    break;
+            }
+        }
+    }
+
+    private void handleAddressBookMode(ShopFront shopFront) {
+        boolean inAddressBookMode = true;
+
+        while (inAddressBookMode) {
+            List<String> command = shopFront.promptAddressBookCmd();
+
+            switch (command.getFirst()) {
+                case "q":
+                    inAddressBookMode = false;
+                    break;
+
+                case "add":
+                    // Handle adding a customer to the address book
+                    break;
+
+                case "list":
+                    // Handle listing all customers in the address book
+                    break;
+
+                default:
+                    shopFront.displayIncorrectArguments();
+                    break;
+            }
+        }
+    }
+
+    private void handleSalesMode(ShopFront shopFront) {
+        boolean inSalesMode = true;
+
+        while (inSalesMode) {
+            List<String> command = shopFront.promptSalesCmd();
+
+            switch (command.getFirst()) {
+                case "q":
+                    inSalesMode = false;
+                    break;
+
+                case "start":
+                    // Handle starting a new transaction
+                    break;
+
+                case "add":
+                    // Handle adding a product to the current transaction
+                    break;
+
+                case "checkout":
+                    // Handle checking out the current transaction
+                    break;
+
+                default:
+                    shopFront.displayIncorrectArguments();
+                    break;
+            }
+        }
+    }
+
+    private void handleHistoryMode(ShopFront shopFront) {
+        boolean inHistoryMode = true;
+
+        while (inHistoryMode) {
+            List<String> command = shopFront.promptHistoryCmd();
+
+            switch (command.get(0)) {
+                case "q":
+                    inHistoryMode = false;
+                    break;
+
+                case "stats":
+                    // Handle displaying statistics
+                    break;
+
+                case "last":
+                    // Handle displaying the last transaction's receipt
+                    break;
+
+                case "grossing":
+                    // Handle displaying the highest-grossing transaction's receipt
+                    break;
+
+                case "popular":
+                    // Handle displaying the most popular product
+                    break;
+
+                default:
+                    shopFront.displayIncorrectArguments();
+                    break;
+            }
+        }
     }
 
     /**
@@ -69,17 +223,13 @@ public class FarmManager extends Object {
      */
     protected void addToInventory(String productName) {
         try {
-            if ("egg".equals(productName)
-                    || "milk".equals(productName)
-                    || "jam".equals(productName)
-                    || "wool".equals(productName)) {
-                farm.addProduct(productName, 1); // Add 1 item of the product
-                shop.displayProductAddSuccess();
-            } else {
-                shop.displayProductAddFailed("Invalid product name: " + productName);
-            }
+            Barcode barcode = Barcode.valueOf(productName.toUpperCase());
+            farm.addToCart(barcode);
+            shop.displayProductAddSuccess();
+        } catch (IllegalArgumentException e) {
+            shop.displayInvalidProductName();
         } catch (Exception e) {
-            shop.displayProductAddFailed("Error adding product: " + e.getMessage());
+            shop.displayProductAddFailed(e.getMessage());
         }
     }
 
@@ -94,17 +244,13 @@ public class FarmManager extends Object {
      */
     protected void addToInventory(String productName, int quantity) {
         try {
-            if ("egg".equals(productName)
-                    || "milk".equals(productName)
-                    || "jam".equals(productName)
-                    || "wool".equals(productName)) {
-                farm.addProduct(productName, quantity);
-                shop.displayProductAddSuccess();
-            } else {
-                shop.displayProductAddFailed("Invalid product name: " + productName);
-            }
+            Barcode barcode = Barcode.valueOf(productName.toUpperCase());
+            farm.addToCart(barcode, quantity);
+            shop.displayProductAddSuccess();
+        } catch (IllegalArgumentException e) {
+            shop.displayInvalidProductName();
         } catch (Exception e) {
-            shop.displayProductAddFailed("Error adding product: " + e.getMessage());
+            shop.displayProductAddFailed(e.getMessage());
         }
     }
 
@@ -120,7 +266,7 @@ public class FarmManager extends Object {
         String address = shop.promptForCustomerAddress();
 
         // Check for duplicate customer
-        if (farm.getCustomer(name, phoneNumber) != null) {
+        if (farm.getCustomer(name, Integer.parseInt(phoneNumber)) != null) {
             shop.displayDuplicateCustomer();
             return;
         }
@@ -133,7 +279,7 @@ public class FarmManager extends Object {
 
         // Create and save the new customer
         Customer customer = new Customer(name, Integer.parseInt(phoneNumber), address);
-        farm.addCustomer(customer);
+        farm.saveCustomer(customer);
 
     }
 
@@ -148,41 +294,56 @@ public class FarmManager extends Object {
      */
     protected void initiateTransaction(String transactionType) {
         try {
+            // Step 1: Prompt the user for the customer's name
             String customerName = shop.promptForCustomerName();
-            String phoneNumber = String.valueOf(shop.promptForCustomerNumber());
 
-            // Validate phone number
-            if (!phoneNumber.matches("\\d+")) {
+            // Step 2: Prompt the user for the customer's phone number
+            int customerPhoneNumber;
+            try {
+                customerPhoneNumber = shop.promptForCustomerNumber();
+            } catch (NumberFormatException e) {
+                // If the phone number is invalid, display an error message and return
                 shop.displayInvalidPhoneNumber();
                 return;
             }
 
-            // Look up customer
-            Customer customer = farm.getCustomer(customerName, phoneNumber);
-            if (customer == null) {
+            // Step 3: Look up the customer in the farm's address book
+            Customer customer;
+            try {
+                customer = farm.getCustomer(customerName, customerPhoneNumber);
+            } catch (CustomerNotFoundException e) {
+                // If the customer is not found, display an error message and return
                 shop.displayCustomerNotFound();
                 return;
             }
 
-            // Create the transaction
-            Transaction transaction = switch (transactionType.toLowerCase()) {
-                case "-s", "-specialise" -> new SpecialSaleTransaction(customer);
-                case "-c", "-categorised" -> new CategorisedTransaction(customer);
-                default -> new Transaction(customer);
-            };
-
-            // Prompt for discounts if needed
-            if (transaction instanceof SpecialSaleTransaction) {
-                // Get discounts logic for SpecialSaleTransaction
+            // Step 4: Create the appropriate transaction based on the transaction type
+            Transaction transaction;
+            if ("-s".equals(transactionType) || "-specialsale".equals(transactionType)) {
+                // SpecialSaleTransaction
                 transaction = new SpecialSaleTransaction(customer);
+            } else if ("-c".equals(transactionType) || "-categorised".equals(transactionType)) {
+                // CategorisedTransaction
+                transaction = new CategorisedTransaction(customer);
+            } else {
+                // Regular Transaction
+                transaction = new Transaction(customer);
             }
 
+            // Step 5: Display the transaction start message
             shop.displayTransactionStart();
-            // Start the transaction
-            // Logic to start the transaction
+
+            // Step 6: Start the transaction
+            try {
+                farm.getTransactionManager().setOngoingTransaction(transaction);
+            } catch (FailedTransactionException e) {
+                // If the transaction fails to start, display an error message
+                shop.displayFailedToCreateTransaction();
+            }
 
         } catch (Exception e) {
-            shop.displayFailedToCreateTransaction();
+            // Handle any other unexpected exceptions
+            shop.displayProductAddFailed("An unexpected error occurred: " + e.getMessage());
         }
     }
 }

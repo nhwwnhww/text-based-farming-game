@@ -13,7 +13,7 @@ import java.util.List;
  * A very basic inventory that stores and handles products individually.
  * Implements the Inventory interface.
  */
-public class BasicInventory extends Object implements Inventory {
+public class BasicInventory implements Inventory {
 
     private final List<Product> products;
 
