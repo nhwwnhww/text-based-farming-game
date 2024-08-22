@@ -25,11 +25,10 @@ public class CategorisedTransaction extends Transaction {
     }
 
     /**
-     * Returns a set of unique barcodes representing the types of products purchased.
-     *
-     * @return A set of barcodes.
+     * Categorizes the products in the transaction by their barcode.
      */
-    public Set<Barcode> getPurchasedTypes() {
+    private void categorizeProducts() {
+        purchasesByType.clear();
         List<Product> purchases = getPurchases();
         for (Product product : purchases) {
             Barcode barcode = product.getBarcode();
@@ -37,6 +36,15 @@ public class CategorisedTransaction extends Transaction {
                     .computeIfAbsent(barcode, k -> new ArrayList<>())
                     .add(product);
         }
+    }
+
+    /**
+     * Returns a set of unique barcodes representing the types of products purchased.
+     *
+     * @return A set of barcodes.
+     */
+    public Set<Barcode> getPurchasedTypes() {
+        categorizeProducts();
         return purchasesByType.keySet();
     }
 
@@ -46,7 +54,7 @@ public class CategorisedTransaction extends Transaction {
      * @return A map of barcodes to lists of products.
      */
     public Map<Barcode, List<Product>> getPurchasesByType() {
-        getPurchasedTypes();
+        categorizeProducts();
         return new HashMap<>(purchasesByType);
 
     }
@@ -58,6 +66,7 @@ public class CategorisedTransaction extends Transaction {
      * @return The total quantity of products with the given barcode.
      */
     public int getPurchaseQuantity(Barcode type) {
+        categorizeProducts();
         List<Product> products = purchasesByType.get(type);
         return products == null ? 0 : products.size();
     }
@@ -69,7 +78,7 @@ public class CategorisedTransaction extends Transaction {
      * @return The subtotal cost of products with the given barcode.
      */
     public int getPurchaseSubtotal(Barcode barcode) {
-        getPurchasedTypes();
+        categorizeProducts();
         List<Product> products = purchasesByType.get(barcode);
         if (products == null) {
             return 0;
@@ -98,9 +107,9 @@ public class CategorisedTransaction extends Transaction {
 
         // Create the list of entries
         List<List<String>> entries = new ArrayList<>();
-        getPurchasedTypes();
+
         for (Barcode barcode : Barcode.values()) {
-            List<Product> products = getPurchasesByType().get(barcode);
+            List<Product> products = purchasesByType.get(barcode);
             if (products != null && !products.isEmpty()) {
                 int quantity = products.size();
                 int pricePerItem = products.getFirst().getBasePrice();
@@ -115,13 +124,9 @@ public class CategorisedTransaction extends Transaction {
             }
         }
 
-        // Calculate the total price and format it
         String total = String.format("$%.2f", getTotal() / 100.0);
-
-        // Get the customer's name
         String customerName = getAssociatedCustomer().getName();
 
-        // Generate the formatted receipt using the ReceiptPrinter
         return ReceiptPrinter.createReceipt(headings, entries, total, customerName);
     }
 
