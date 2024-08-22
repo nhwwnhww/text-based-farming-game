@@ -84,7 +84,7 @@ public class TransactionHistory extends Object {
     public int getGrossEarnings(Barcode type) {
         return transactionHistory
                 .stream()
-                .flatMap(transaction -> transaction.getPurchasesByType().entrySet().stream())
+                .flatMap(transaction -> (transaction).getPurchasesByType().entrySet().stream())
                 .filter(entry -> entry.getKey().equals(type))
                 .mapToInt(entry -> entry.getValue().stream().mapToInt(Product::getBasePrice).sum())
                 .sum();

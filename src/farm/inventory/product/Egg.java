@@ -22,6 +22,6 @@ public class Egg extends Product {
      * If no quality is provided, it defaults to regular quality.
      */
     public Egg() {
-        this(Quality.REGULAR);
+        super(barcode, Quality.REGULAR);
     }
 }

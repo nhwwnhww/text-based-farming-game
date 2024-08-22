@@ -22,7 +22,7 @@ public class Milk extends Product {
      * If no quality is provided, it defaults to regular quality.
      */
     public Milk() {
-        this(Quality.REGULAR);
+        super(barcode, Quality.REGULAR);
     }
 
 }

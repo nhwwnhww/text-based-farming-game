@@ -22,7 +22,7 @@ public class Wool extends Product {
      * If no quality is provided, it defaults to regular quality.
      */
     public Wool() {
-        this(Quality.REGULAR);
+        super(barcode, Quality.REGULAR);
     }
 
 }

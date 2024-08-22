@@ -22,7 +22,7 @@ public class Jam extends Product {
      * If no quality is provided, it defaults to regular quality.
      */
     public Jam() {
-        this(Quality.REGULAR);
+        super(barcode, Quality.REGULAR);
     }
 
 }
