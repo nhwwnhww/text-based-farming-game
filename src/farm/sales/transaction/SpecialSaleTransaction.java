@@ -86,16 +86,6 @@ public class SpecialSaleTransaction extends CategorisedTransaction {
      * @return The numerical savings from discounts.
      */
     public int getTotalSaved() {
-//        return getPurchasedTypes().stream()
-//                .mapToInt(type -> {
-//                    int subtotal = getPurchasesByType().get(type).stream()
-//                            .mapToInt(Product::getBasePrice)
-//                            .sum();
-//                    int discountPercentage = getDiscountAmount(type);
-//                    return subtotal * discountPercentage / 100;
-//                })
-//                .sum();
-
         return getPurchasesByType().keySet().stream()
                 .mapToInt(type -> getPurchaseQuantity(type) - getPurchaseSubtotal(type))
                 .sum();

@@ -2,6 +2,9 @@ package farm;
 
 //Stage 0
 import farm.core.DuplicateCustomerException;
+import farm.core.Farm;
+import farm.core.FarmManager;
+import farm.core.ShopFront;
 import farm.customer.*;
 
 import java.util.List;
@@ -9,12 +12,13 @@ import java.util.List;
 // Stage 1
 import farm.inventory.product.*;
 import farm.inventory.product.data.Barcode;
+import farm.inventory.product.data.Quality;
 import farm.sales.transaction.CategorisedTransaction;
 import farm.sales.transaction.SpecialSaleTransaction;
 import farm.sales.transaction.Transaction;
 
 // Stage 2 + Stage 3
-//import farm.inventory.*;
+import farm.inventory.*;
 
 /**
  * Execute the Farm MVP program.
@@ -27,7 +31,6 @@ public class Main {
      * Start the farm program.
      * @param args Parameters to the program, currently not supported.
      */
-    @SuppressWarnings("checkstyle:LeftCurly")
     public static void main(String[] args)
          throws DuplicateCustomerException {
         // Stage 1
@@ -57,47 +60,34 @@ public class Main {
         System.out.println("\n");
         System.out.println(transaction.getReceipt());
 
-        transaction = new CategorisedTransaction(customer);
+        transaction = new SpecialSaleTransaction(customer);
         for (int i = 0; i < 3; i++) {
             transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
         }
         transaction.getAssociatedCustomer().getCart().addProduct(new Egg());
         transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
-        System.out.println("-------@@-----------------@@--------");
-        System.out.println(((CategorisedTransaction) transaction).getPurchasesByType());
-        // Now, test your category methods
         transaction.finalise();
         System.out.println("\n".repeat(3));
-        System.out.println("-------@@-----------------@@--------");
-
-//        transaction = new SpecialSaleTransaction(customer);
-//        for (int i = 0; i < 3; i++) {
-//            transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
-//        }
-//        transaction.getAssociatedCustomer().getCart().addProduct(new Egg());
-//        transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
-//        transaction.finalise();
-//        System.out.println("\n".repeat(3));
 
         // -- Stage 2 + 3: Combining them together
 
-        //Inventory inventory = new BasicInventory();
-        //boolean fancy = false;
+        Inventory inventory = new BasicInventory();
+        boolean fancy = false;
 
         // Keep removed for Stage 2 but add when Stage 3 is done
-        ////inventory = new FancyInventory();
-        ////fancy = true;
+        //inventory = new FancyInventory();
+        //fancy = true;
 
-        //for (Barcode barcode : List.of(Barcode.MILK, Barcode.EGG, Barcode.WOOL, Barcode.EGG)) {
-        //    for (Quality quality : List.of(Quality.REGULAR, Quality.SILVER, Quality.REGULAR,
-        //            Quality.GOLD, Quality.REGULAR, Quality.REGULAR, Quality.IRIDIUM)) {
-        //        inventory.addProduct(barcode, quality);
-        //    }
-        //}
+        for (Barcode barcode : List.of(Barcode.MILK, Barcode.EGG, Barcode.WOOL, Barcode.EGG)) {
+            for (Quality quality : List.of(Quality.REGULAR, Quality.SILVER, Quality.REGULAR,
+                    Quality.GOLD, Quality.REGULAR, Quality.REGULAR, Quality.IRIDIUM)) {
+                inventory.addProduct(barcode, quality);
+            }
+        }
 
-        //FarmManager manager = new FarmManager(new Farm(inventory, addressBook),
-        //        new ShopFront(), fancy);
-        //manager.run();
+        FarmManager manager = new FarmManager(new Farm(inventory, addressBook),
+                new ShopFront(), fancy);
+        manager.run();
 
 
     }

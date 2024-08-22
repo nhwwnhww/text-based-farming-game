@@ -1,114 +1,72 @@
 package farm.inventory;
 
+import farm.core.FailedTransactionException;
+import farm.core.InvalidStockRequestException;
 import farm.inventory.product.Product;
-import farm.inventory.product.data.Barcode;
 import farm.inventory.product.data.Quality;
+import farm.inventory.product.data.Barcode;
 
-import java.util.ArrayList;
+
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Represents an abstract inventory that holds products.
- * This class should be extended by specific types of inventories.
+ * An interface representing the base requirements for an Inventory.
+ * Handles adding and removing items from storage.
+ * Implementations of this interface must provide support for managing individual and bulk product operations.
+ * Component of Stage 2.
  */
-public abstract class Inventory {
-    private final List<Product> products;
+public interface Inventory {
 
     /**
-     * Constructs a new Inventory with an empty list of products.
-     */
-    public Inventory() {
-        this.products = new ArrayList<>();
-    }
-
-    /**
-     * Adds a product to the inventory based on the barcode and quality.
-     * This method assumes a default quantity of 1.
+     * Adds a new product with the specified barcode and quality to the inventory.
      *
-     * @param barcode The barcode of the product.
-     * @param quality The quality of the product.
+     * @param barcode the barcode of the product to add.
+     * @param quality the quality of the product to add.
      */
-    public void addProduct(Barcode barcode, Quality quality) {
-        addProduct(barcode, quality, 1);
-    }
+    void addProduct(Barcode barcode, Quality quality);
 
     /**
-     * Adds a specified quantity of a product to the inventory based on the barcode and quality.
+     * Adds the specified quantity of the product with the given barcode to the inventory.
+     * This method allows for bulk additions if the implementing inventory supports it.
      *
-     * @param barcode  The barcode of the product.
-     * @param quality  The quality of the product.
-     * @param quantity The number of products to add.
+     * @param barcode the barcode of the product to add.
+     * @param quality the quality of the product to add.
+     * @param quantity the amount of the product to add.
+     * @throws InvalidStockRequestException if the implementing inventory does not support adding multiple products at once.
      */
-    public void addProduct(Barcode barcode, Quality quality, int quantity) {
-        for (int i = 0; i < quantity; i++) {
-            products.add(createProduct(barcode, quality));
-        }
-    }
+    void addProduct(Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException;
 
     /**
-     * Checks if a product with the specified barcode exists in the inventory.
+     * Determines if a product with the given barcode exists in the inventory.
      *
-     * @param barcode The barcode of the product.
+     * @param barcode the barcode of the product to check.
      * @return true if the product exists, false otherwise.
      */
-    public boolean existsProduct(Barcode barcode) {
-        return products.stream().anyMatch(product -> product.getBarcode().equals(barcode));
-    }
+    boolean existsProduct(Barcode barcode);
 
     /**
-     * Removes all products with the specified barcode from the inventory.
+     * Retrieves the full stock currently held in the inventory.
      *
-     * @param barcode The barcode of the product to remove.
-     * @return A list of removed products.
+     * @return a list containing all products currently stored in the inventory.
      */
-    public List<Product> removeProduct(Barcode barcode) {
-        List<Product> removedProducts = products.stream()
-                .filter(product -> product.getBarcode().equals(barcode))
-                .collect(Collectors.toList());
-
-        products.removeIf(product -> product.getBarcode().equals(barcode));
-        return removedProducts;
-    }
+    List<Product> getAllProducts();
 
     /**
-     * Removes a specified quantity of products with the specified barcode from the inventory.
+     * Removes the first product with the specified barcode from the inventory.
      *
-     * @param barcode  The barcode of the product to remove.
-     * @param quantity The number of products to remove.
-     * @return A list of removed products.
+     * @param barcode the barcode of the product to be removed.
+     * @return a list containing the removed product if it exists, else an empty list.
      */
-    public List<Product> removeProduct(Barcode barcode, int quantity) {
-        List<Product> removedProducts = new ArrayList<>();
-        int removedCount = 0;
-
-        for (Product product : new ArrayList<>(products)) {
-            if (product.getBarcode().equals(barcode) && removedCount < quantity) {
-                products.remove(product);
-                removedProducts.add(product);
-                removedCount++;
-            }
-        }
-
-        return removedProducts;
-    }
+    List<Product> removeProduct(Barcode barcode);
 
     /**
-     * Returns a list of all products in the inventory.
+     * Removes the specified number of products with the given barcode from the inventory.
+     * This method allows for bulk removals if the implementing inventory supports it.
      *
-     * @return A list of products.
+     * @param barcode the barcode of the product to remove.
+     * @param quantity the total amount of the product to remove from the inventory.
+     * @return a list containing the removed products if they exist, else an empty list.
+     * @throws FailedTransactionException if the implementing inventory does not support removing multiple products at once.
      */
-    public List<Product> getAllProducts() {
-        return new ArrayList<>(products);
-    }
-
-    /**
-     * Creates a product based on the barcode and quality.
-     * Subclasses must implement this method to return the appropriate product type.
-     *
-     * @param barcode The barcode of the product.
-     * @param quality The quality of the product.
-     * @return A new Product instance.
-     */
-    protected abstract Product createProduct(Barcode barcode, Quality quality);
+    List<Product> removeProduct(Barcode barcode, int quantity) throws FailedTransactionException;
 }

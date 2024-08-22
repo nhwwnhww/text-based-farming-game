@@ -6,7 +6,9 @@ import java.util.*;
 /**
  * The user interface for the farm program.
  * <p>
- * <b>Note: </b> There are more methods in the ShopFront then displayed in the JavaDocs. Only the methods you will be required to use are visible though there are JavaDocs in the provided code if you are interested.
+ * <b>Note: </b> There are more methods in the ShopFront then
+ * displayed in the JavaDocs. Only the methods you will be required
+ * to use are visible though there are JavaDocs in the provided code if you are interested.
  * @provided
  */
 public class ShopFront {
