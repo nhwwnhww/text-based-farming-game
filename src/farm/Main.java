@@ -67,6 +67,7 @@ public class Main {
         transaction.getAssociatedCustomer().getCart().addProduct(new Milk());
         transaction.finalise();
         System.out.println("\n".repeat(3));
+        System.out.println(transaction.getReceipt());
 
         // -- Stage 2 + 3: Combining them together
 

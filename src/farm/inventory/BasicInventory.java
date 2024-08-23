@@ -7,6 +7,7 @@ import farm.core.InvalidStockRequestException;
 import farm.core.FailedTransactionException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -98,7 +99,7 @@ public class BasicInventory implements Inventory {
                 break; // Remove only the first matching product
             }
         }
-        return removedProducts;
+        return Collections.unmodifiableList(removedProducts); // Return an immutable list
     }
 
     /**

@@ -4,14 +4,13 @@ import farm.customer.AddressBook;
 import farm.customer.Customer;
 import farm.inventory.BasicInventory;
 import farm.inventory.Inventory;
+import farm.inventory.product.*;
 import farm.inventory.product.data.Quality;
 import farm.sales.TransactionHistory;
 import farm.sales.TransactionManager;
 import farm.sales.transaction.Transaction;
 import farm.inventory.product.data.Barcode;
-import farm.inventory.product.Product;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -24,7 +23,6 @@ public class Farm {
     private final AddressBook addressBook;
     private final TransactionManager transactionManager;
     private final TransactionHistory transactionHistory;
-    private Transaction currentTransaction;
 
     /**
      * Creates a new Farm instance with the specified inventory and address book.
@@ -37,7 +35,6 @@ public class Farm {
         this.addressBook = addressBook;
         this.transactionManager = new TransactionManager();
         this.transactionHistory = new TransactionHistory();
-        this.currentTransaction = null;
     }
 
     /**
@@ -130,7 +127,9 @@ public class Farm {
         // Check if the customer associated with the transaction exists in the address book
         if (!addressBook.containsCustomer(transaction.getAssociatedCustomer())) {
             throw new FailedTransactionException(
-                    "This transaction does not exist in the address book.");
+                    "Current inventory is not fancy enough."
+                            +
+                            " Please purchase products one at a time.");
         }
 
         // Set the transaction as the ongoing transaction in the transaction manager
@@ -162,8 +161,16 @@ public class Farm {
             return 0;  // No product was removed, so nothing was added to the cart
         }
 
+        Product product = switch (barcode) {
+            case EGG -> new Egg();
+            case MILK -> new Milk();
+            case JAM -> new Jam();
+            case WOOL -> new Wool();
+            default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
+        };
+
         // Add the product to the customer's cart via the transaction manager
-        transactionManager.registerPendingPurchase(new Product(barcode, Quality.REGULAR));
+        transactionManager.registerPendingPurchase(product);
 
         return 1;  // Successfully added one product to the cart
     }
@@ -188,12 +195,6 @@ public class Farm {
             throw new FailedTransactionException(
                     "Cannot add to cart when no customer has started shopping.");
         }
-
-        // Check if the inventory is a FancyInventory or Basic
-//        if (!(inventory instanceof FancyInventory) && quantity > 1) {
-//            throw new FailedTransactionException("Current inventory is not
-//            fancy enough. Please purchase products one at a time.");
-//        }
 
         int productsAdded = 0;
 

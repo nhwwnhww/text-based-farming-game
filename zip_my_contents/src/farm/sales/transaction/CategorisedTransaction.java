@@ -30,13 +30,7 @@ public class CategorisedTransaction extends Transaction {
      * @return A set of barcodes.
      */
     public Set<Barcode> getPurchasedTypes() {
-        List<Product> purchases = getPurchases();
-        for (Product product : purchases) {
-            Barcode barcode = product.getBarcode();
-            this.purchasesByType
-                    .computeIfAbsent(barcode, k -> new ArrayList<>())
-                    .add(product);
-        }
+        populatePurchasesByType();
         return purchasesByType.keySet();
     }
 
@@ -46,7 +40,7 @@ public class CategorisedTransaction extends Transaction {
      * @return A map of barcodes to lists of products.
      */
     public Map<Barcode, List<Product>> getPurchasesByType() {
-        getPurchasedTypes();
+        populatePurchasesByType();
         return new HashMap<>(purchasesByType);
 
     }
@@ -58,7 +52,7 @@ public class CategorisedTransaction extends Transaction {
      * @return The total quantity of products with the given barcode.
      */
     public int getPurchaseQuantity(Barcode type) {
-        // Ensure purchasesByType is up to date
+        // Ensure purchasesByType is up-to-date
         populatePurchasesByType();
 
         List<Product> products = purchasesByType.get(type);
@@ -72,7 +66,7 @@ public class CategorisedTransaction extends Transaction {
      * @return The subtotal cost of products with the given barcode.
      */
     public int getPurchaseSubtotal(Barcode barcode) {
-        // Ensure purchasesByType is up to date
+        // Ensure purchasesByType is up-to-date
         populatePurchasesByType();
         List<Product> products = purchasesByType.get(barcode);
         if (products == null) {
@@ -85,12 +79,15 @@ public class CategorisedTransaction extends Transaction {
                 .sum();
     }
 
+    /**
+     * Populates the purchasesByType map with the products from the current transaction.
+     */
     private void populatePurchasesByType() {
-        if (purchasesByType.isEmpty()) {
-            for (Product product : getPurchases()) {
-                Barcode barcode = product.getBarcode();
-                purchasesByType.computeIfAbsent(barcode, k -> new ArrayList<>()).add(product);
-            }
+        purchasesByType.clear();  // Clear previous data to avoid accumulation
+
+        for (Product product : getPurchases()) {
+            Barcode barcode = product.getBarcode();
+            purchasesByType.computeIfAbsent(barcode, k -> new ArrayList<>()).add(product);
         }
     }
 

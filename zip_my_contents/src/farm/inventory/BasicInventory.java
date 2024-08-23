@@ -1,12 +1,13 @@
 package farm.inventory;
 
-import farm.inventory.product.Product;
+import farm.inventory.product.*;
 import farm.inventory.product.data.Barcode;
 import farm.inventory.product.data.Quality;
 import farm.core.InvalidStockRequestException;
 import farm.core.FailedTransactionException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -32,7 +33,14 @@ public class BasicInventory implements Inventory {
      */
     @Override
     public void addProduct(Barcode barcode, Quality quality) {
-        products.add(new Product(barcode, quality));
+        Product product = switch (barcode) {
+            case EGG -> new Egg(quality);
+            case MILK -> new Milk(quality);
+            case JAM -> new Jam(quality);
+            case WOOL -> new Wool(quality);
+            default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
+        };
+        products.add(product);
     }
 
     /**
@@ -44,9 +52,12 @@ public class BasicInventory implements Inventory {
      * @throws InvalidStockRequestException if the quantity is greater than 1.
      */
     @Override
-    public void addProduct(Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException {
+    public void addProduct(Barcode barcode,
+                           Quality quality,
+                           int quantity) throws InvalidStockRequestException {
         if (quantity > 1) {
-            throw new InvalidStockRequestException("Current inventory is not fancy enough. Please supply products one at a time.");
+            throw new InvalidStockRequestException(
+                    "Current inventory is not fancy enough. Please supply products one at a time.");
         }
         addProduct(barcode, quality);
     }
@@ -88,7 +99,7 @@ public class BasicInventory implements Inventory {
                 break; // Remove only the first matching product
             }
         }
-        return removedProducts;
+        return Collections.unmodifiableList(removedProducts); // Return an immutable list
     }
 
     /**
@@ -100,9 +111,13 @@ public class BasicInventory implements Inventory {
      * @throws FailedTransactionException if the quantity is greater than 1.
      */
     @Override
-    public List<Product> removeProduct(Barcode barcode, int quantity) throws FailedTransactionException {
+    public List<Product> removeProduct(
+            Barcode barcode, int quantity) throws FailedTransactionException {
         if (quantity > 1) {
-            throw new FailedTransactionException("Current inventory is not fancy enough. Please purchase products one at a time.");
+            throw new FailedTransactionException(
+                    "Current inventory is not fancy enough."
+                            +
+                            " Please purchase products one at a time.");
         }
         return removeProduct(barcode);
     }

@@ -227,9 +227,9 @@ public class FarmManager {
             farm.addToCart(barcode);
             shop.displayProductAddSuccess();
         } catch (IllegalArgumentException e) {
-            shop.displayInvalidProductName();
+            shop.displayProductAddFailed("Invalid product name: " + productName);
         } catch (Exception e) {
-            shop.displayProductAddFailed(e.getMessage());
+            shop.displayProductAddFailed("An unexpected error occurred: " + e.getMessage());
         }
     }
 
@@ -245,7 +245,9 @@ public class FarmManager {
     protected void addToInventory(String productName, int quantity) {
         try {
             Barcode barcode = Barcode.valueOf(productName.toUpperCase());
-            farm.addToCart(barcode, quantity);
+            for (int i = 0; i < quantity; i++) {
+                farm.addToCart(barcode); // Adding each product individually
+            }
             shop.displayProductAddSuccess();
         } catch (IllegalArgumentException e) {
             shop.displayInvalidProductName();

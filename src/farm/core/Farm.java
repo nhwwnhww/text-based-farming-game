@@ -105,7 +105,8 @@ public class Farm {
      * @throws IllegalArgumentException If quantity is less than 1.
      * @throws InvalidStockRequestException If the quantity is greater than 1 when a FancyInventory is not in use.
      */
-    public void stockProduct(Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException {
+    public void stockProduct(
+            Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException {
         if (quantity < 1) {
             throw new IllegalArgumentException("Quantity must be at least 1.");
         }
@@ -127,7 +128,9 @@ public class Farm {
         // Check if the customer associated with the transaction exists in the address book
         if (!addressBook.containsCustomer(transaction.getAssociatedCustomer())) {
             throw new FailedTransactionException(
-                    "This transaction does not exist in the address book.");
+                    "Current inventory is not fancy enough."
+                            +
+                            " Please purchase products one at a time.");
         }
 
         // Set the transaction as the ongoing transaction in the transaction manager

@@ -227,9 +227,9 @@ public class FarmManager {
             farm.addToCart(barcode);
             shop.displayProductAddSuccess();
         } catch (IllegalArgumentException e) {
-            shop.displayInvalidProductName();
+            shop.displayProductAddFailed("Invalid product name: " + productName);
         } catch (Exception e) {
-            shop.displayProductAddFailed(e.getMessage());
+            shop.displayProductAddFailed("An unexpected error occurred: " + e.getMessage());
         }
     }
 
