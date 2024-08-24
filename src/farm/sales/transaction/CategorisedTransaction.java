@@ -3,6 +3,7 @@ package farm.sales.transaction;
 import farm.customer.Customer;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Barcode;
+import farm.inventory.product.data.Quality;
 import farm.sales.ReceiptPrinter;
 
 import java.util.*;
@@ -52,10 +53,7 @@ public class CategorisedTransaction extends Transaction {
      * @return The total quantity of products with the given barcode.
      */
     public int getPurchaseQuantity(Barcode type) {
-        // Ensure purchasesByType is up-to-date
-        populatePurchasesByType();
-
-        List<Product> products = purchasesByType.get(type);
+        List<Product> products = getPurchasesByType().get(type);
         return products == null ? 0 : products.size();
     }
 
@@ -66,28 +64,27 @@ public class CategorisedTransaction extends Transaction {
      * @return The subtotal cost of products with the given barcode.
      */
     public int getPurchaseSubtotal(Barcode barcode) {
-        // Ensure purchasesByType is up-to-date
-        populatePurchasesByType();
-        List<Product> products = purchasesByType.get(barcode);
-        if (products == null) {
-            return 0;
-        }
-
-        return products
-                .stream()
-                .mapToInt(Product::getBasePrice)
-                .sum();
+        int quality = getPurchaseQuantity(barcode);
+        return quality * barcode.getBasePrice();
     }
 
     /**
      * Populates the purchasesByType map with the products from the current transaction.
      */
     private void populatePurchasesByType() {
-        purchasesByType.clear();  // Clear previous data to avoid accumulation
-
+        this.purchasesByType.clear();  // Clear previous data to avoid accumulation
         for (Product product : getPurchases()) {
-            Barcode barcode = product.getBarcode();
-            purchasesByType.computeIfAbsent(barcode, k -> new ArrayList<>()).add(product);
+            Barcode barcode = product.getBarcode();  // Get the barcode of the product
+
+            // If the map already contains the barcode, add the product to the existing list
+            if (purchasesByType.containsKey(barcode)) {
+                purchasesByType.get(barcode).add(product);
+            } else {
+                // If the barcode is not present, create a new list and add the product to it
+                List<Product> productList = new ArrayList<>();
+                productList.add(product);
+                purchasesByType.put(barcode, productList);
+            }
         }
     }
 
@@ -103,26 +100,28 @@ public class CategorisedTransaction extends Transaction {
             return ReceiptPrinter.createActiveReceipt();
         }
 
-        // Define the headings as specified
+        // Define the headings
         List<String> headings = List.of("Item", "Qty", "Price (ea.)", "Subtotal");
 
         // Create the list of entries
         List<List<String>> entries = new ArrayList<>();
-        getPurchasedTypes();
-        for (Barcode barcode : Barcode.values()) {
-            List<Product> products = getPurchasesByType().get(barcode);
-            if (products != null && !products.isEmpty()) {
-                int quantity = products.size();
-                int pricePerItem = products.getFirst().getBasePrice();
-                int subtotal = getPurchaseSubtotal(barcode);
 
-                String itemName = barcode.getDisplayName().toLowerCase();
-                String qtyString = String.valueOf(quantity);
-                String priceString = String.format("$%.2f", pricePerItem / 100.0);
-                String subtotalString = String.format("$%.2f", subtotal / 100.0);
+        List<Barcode> sortedBarcode = new ArrayList<>(getPurchasedTypes());
+        List<Barcode> predefinedOrder = Arrays.asList(Barcode.values());
 
-                entries.add(List.of(itemName, qtyString, priceString, subtotalString));
-            }
+        sortedBarcode.sort(Comparator.comparingInt(predefinedOrder::indexOf));
+
+        for (Barcode barcode : sortedBarcode) {
+            int quantity = getPurchaseQuantity(barcode);
+            int pricePerItem = barcode.getBasePrice();
+            int subtotal = getPurchaseSubtotal(barcode);
+
+            String itemName = barcode.getDisplayName().toLowerCase();
+            String qtyString = String.valueOf(quantity);
+            String priceString = String.format("$%.2f", pricePerItem / 100.0);
+            String subtotalString = String.format("$%.2f", subtotal / 100.0);
+
+            entries.add(List.of(itemName, qtyString, priceString, subtotalString));
         }
 
         // Calculate the total price and format it

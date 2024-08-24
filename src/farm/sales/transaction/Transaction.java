@@ -54,8 +54,8 @@ public class Transaction {
      */
     public void finalise() {
         this.finalised = true;
-        purchases = associatedCustomer.getCart().getContents();
-        associatedCustomer.getCart().setEmpty();
+        this.purchases = associatedCustomer.getCart().getContents();
+        this.associatedCustomer.getCart().setEmpty();
     }
 
     /**
@@ -65,10 +65,10 @@ public class Transaction {
      */
     public List<Product> getPurchases() {
         if (!isFinalised()) {
-            System.out.println("transaction not finalised");
             return new ArrayList<>(associatedCustomer.getCart().getContents());
+        } else {
+            return new ArrayList<>(purchases);
         }
-        return new ArrayList<>(purchases);
     }
 
     /**
@@ -77,15 +77,11 @@ public class Transaction {
      * @return The total cost.
      */
     public int getTotal() {
-        if (!isFinalised()) {
-            return associatedCustomer.getCart()
-                    .getContents()
-                    .stream()
-                    .mapToInt(Product::getBasePrice)
-                    .sum();
+        int total = 0;
+        for (Product product : getPurchases()) {
+            total += product.getBasePrice();
         }
-        return purchases.stream().mapToInt(Product::getBasePrice).sum();
-
+        return total;
     }
 
     /**
@@ -93,21 +89,7 @@ public class Transaction {
      *
      * @return A string describing the transaction.
      */
-    @Override
     public String toString() {
-        if (!isFinalised()) {
-            return "Transaction {Customer: "
-                    + associatedCustomer.getName()
-                    + " | Phone Number: "
-                    + associatedCustomer.getPhoneNumber()
-                    + " | Address: "
-                    + associatedCustomer.getAddress()
-                    + ", Status: "
-                    + (isFinalised() ? "Finalised" : "Active")
-                    + ", Associated Products: "
-                    + associatedCustomer.getCart().getContents()
-                    + "}";
-        }
         return "Transaction {Customer: "
                 + associatedCustomer.getName()
                 + " | Phone Number: "
@@ -117,7 +99,7 @@ public class Transaction {
                 + ", Status: "
                 + (isFinalised() ? "Finalised" : "Active")
                 + ", Associated Products: "
-                + purchases
+                + this.getPurchases()
                 + "}";
 
     }
@@ -128,8 +110,6 @@ public class Transaction {
      * @return A string representing the receipt of the transaction.
      */
     public String getReceipt() {
-        StringBuilder receipt = new StringBuilder();
-
         if (!isFinalised()) {
             return ReceiptPrinter.createActiveReceipt();
         }
