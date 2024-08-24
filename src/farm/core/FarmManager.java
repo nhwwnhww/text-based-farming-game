@@ -60,7 +60,7 @@ public class FarmManager {
      * Begins the running of the UI and interprets user input to begin the appropriate mode.
      * @provided
      */
-    public void run() throws DuplicateCustomerException, CustomerNotFoundException {
+    public void run() {
         boolean running = true;
         this.startDisplay();
         while (running) {
@@ -87,7 +87,7 @@ public class FarmManager {
         try {
 
             Barcode barcode = Barcode.valueOf(productName.toUpperCase());
-            farm.addToCart(barcode); // Adding each product individually
+            farm.stockProduct(barcode, Quality.REGULAR);
             shop.displayProductAddSuccess();
         } catch (Exception e) {
             shop.displayProductAddFailed(e.getMessage());
@@ -105,9 +105,7 @@ public class FarmManager {
     protected void addToInventory(String productName, int quantity) {
         try {
             Barcode barcode = Barcode.valueOf(productName.toUpperCase());
-            for (int i = 0; i < quantity; i++) {
-                farm.addToCart(barcode); // Adding each product individually
-            }
+            farm.stockProduct(barcode, Quality.REGULAR, quantity);
             shop.displayProductAddSuccess();
         } catch (IllegalArgumentException e) {
             shop.displayInvalidProductName();
@@ -121,16 +119,10 @@ public class FarmManager {
     /**
      * Prompt the user to create a new customer and then save it to the farms address book for later usage.
      */
-    protected void createCustomer() throws CustomerNotFoundException, DuplicateCustomerException {
+    protected void createCustomer() {
         String name = shop.promptForCustomerName();
         String phoneNumber = String.valueOf(shop.promptForCustomerNumber());
         String address = shop.promptForCustomerAddress();
-
-        // Check for duplicate customer
-        if (farm.getCustomer(name, Integer.parseInt(phoneNumber)) != null) {
-            shop.displayDuplicateCustomer();
-            return;
-        }
 
         // Validate phone number
         if (!phoneNumber.matches("\\d+")) {
@@ -138,9 +130,33 @@ public class FarmManager {
             return;
         }
 
-        // Create and save the new customer
-        Customer customer = new Customer(name, Integer.parseInt(phoneNumber), address);
-        farm.saveCustomer(customer);
+        // Attempt to create and save the new customer
+        try {
+            // Convert phoneNumber string to integer
+            int phone = Integer.parseInt(phoneNumber);
+
+            // Check if a customer with the same details already exists
+            Customer existingCustomer = farm.getCustomer(name, phone);
+            if (existingCustomer != null) {
+                shop.displayDuplicateCustomer();
+            } else {
+                // Create and save the new customer if they do not already exist
+                Customer customer = new Customer(name, phone, address);
+                farm.saveCustomer(customer);
+            }
+        } catch (CustomerNotFoundException e) {
+            // If no customer is found, create a new one
+            Customer customer = new Customer(name, Integer.parseInt(phoneNumber), address);
+            try {
+                farm.saveCustomer(customer);
+            } catch (DuplicateCustomerException dce) {
+                shop.displayDuplicateCustomer();
+            }
+        } catch (NumberFormatException e) {
+            shop.displayInvalidPhoneNumber();
+        } catch (DuplicateCustomerException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
@@ -151,57 +167,42 @@ public class FarmManager {
      * @param transactionType the type of transaction to make
      */
     protected void initiateTransaction(String transactionType) {
+        // Prompt user for customer details
+        String name = shop.promptForCustomerName();
+        String phoneNumber = String.valueOf(shop.promptForCustomerNumber());
+
+        // Validate phone number
+        if (!phoneNumber.matches("\\d+")) {
+            shop.displayInvalidPhoneNumber();
+            return;
+        }
+
         try {
-            // Step 1: Prompt the user for the customer's name
-            String customerName = shop.promptForCustomerName();
+            // Convert phone number to integer and retrieve customer
+            int phoneInt = Integer.parseInt(phoneNumber);
+            Customer customer = farm.getCustomer(name, phoneInt);
 
-            // Step 2: Prompt the user for the customer's phone number
-            int customerPhoneNumber;
-            try {
-                customerPhoneNumber = shop.promptForCustomerNumber();
-            } catch (NumberFormatException e) {
-                // If the phone number is invalid, display an error message and return
-                shop.displayInvalidPhoneNumber();
-                return;
-            }
+            // Determine the type of transaction to create based on the input parameter
+            Transaction transaction = switch (transactionType) {
+                case "-s", "-specialsale" -> {
+                    Map<Barcode, Integer> discount = getDiscounts();
+                    yield new SpecialSaleTransaction(customer, discount);
+                }
+                case "-c", "-categorised" -> new CategorisedTransaction(customer);
+                default -> new Transaction(customer);
+            };
 
-            // Step 3: Look up the customer in the farm's address book
-            Customer customer;
-            try {
-                customer = farm.getCustomer(customerName, customerPhoneNumber);
-            } catch (CustomerNotFoundException e) {
-                // If the customer is not found, display an error message and return
-                shop.displayCustomerNotFound();
-                return;
-            }
-
-            // Step 4: Create the appropriate transaction based on the transaction type
-            Transaction transaction;
-            if ("-s".equals(transactionType) || "-specialsale".equals(transactionType)) {
-                // SpecialSaleTransaction
-                transaction = new SpecialSaleTransaction(customer);
-            } else if ("-c".equals(transactionType) || "-categorised".equals(transactionType)) {
-                // CategorisedTransaction
-                transaction = new CategorisedTransaction(customer);
-            } else {
-                // Regular Transaction
-                transaction = new Transaction(customer);
-            }
-
-            // Step 5: Display the transaction start message
-            shop.displayTransactionStart();
-
-            // Step 6: Start the transaction
+            // Start the transaction and handle potential failures
             try {
                 farm.getTransactionManager().setOngoingTransaction(transaction);
+                shop.displayTransactionStart();
             } catch (FailedTransactionException e) {
-                // If the transaction fails to start, display an error message
                 shop.displayFailedToCreateTransaction();
             }
-
-        } catch (Exception e) {
-            // Handle any other unexpected exceptions
-            shop.displayProductAddFailed("An unexpected error occurred: " + e.getMessage());
+        } catch (CustomerNotFoundException e) {
+            shop.displayCustomerNotFound();
+        } catch (NumberFormatException e) {
+            shop.displayInvalidPhoneNumber();
         }
 
     }
@@ -257,7 +258,7 @@ public class FarmManager {
     /**
      * Launches the address book mode of the CLI.
      */
-    private void launchAddressBookMode() throws DuplicateCustomerException, CustomerNotFoundException {
+    private void launchAddressBookMode() {
         boolean running = true;
         while (running) {
             List<String> input = shop.promptAddressBookCmd();
@@ -489,7 +490,8 @@ public class FarmManager {
                     | Average Discount:    %.0f`
                     |--------------------------
                     """, history.getTotalTransactionsMade(),
-                                history.getAverageSpendPerVisit() / 100.0f, barcode.getDisplayName(),
+                                history.getAverageSpendPerVisit() / 100.0f,
+                        barcode.getDisplayName(),
                                 history.getTotalProductsSold(barcode),
                                 history.getGrossEarnings(barcode) / 100.0f,
                                 history.getAverageProductDiscount(barcode)

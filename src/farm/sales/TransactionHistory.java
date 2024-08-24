@@ -5,10 +5,8 @@ import farm.sales.transaction.SpecialSaleTransaction;
 import farm.sales.transaction.Transaction;
 import farm.inventory.product.data.Barcode;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.LongStream;
 
 /**
  * Constructs a new TransactionHistory object.
@@ -67,10 +65,7 @@ public class TransactionHistory {
      * @return the gross earnings from all transactions in history, in cents.
      */
     public int getGrossEarnings() {
-        return transactionHistory
-                .stream()
-                .mapToInt(Transaction::getTotal)
-                .sum();
+        return getTotalProductsSold();
     }
 
     /**
@@ -84,11 +79,7 @@ public class TransactionHistory {
      * @return the gross earnings from all sales of the product type, in cents.
      */
     public int getGrossEarnings(Barcode type) {
-        return transactionHistory
-                .stream()
-                .mapToInt(Transaction::getTotal) // For each transaction,
-                // get its total and sum them up
-                .sum();
+        return getTotalProductsSold(type);
     }
 
     /**
@@ -134,24 +125,7 @@ public class TransactionHistory {
      * @return the transaction with the highest gross earnings.
      */
     public Transaction getHighestGrossingTransaction() {
-        if (transactionHistory.isEmpty()) {
-            return null; // Return null if there are no transactions in the history
-        }
-
-        // Initialize the highest grossing transaction as the first one in the list
-        Transaction highestGrossingTransaction = transactionHistory.getFirst();
-        int highestGross = highestGrossingTransaction.getTotal();
-
-        // Iterate through the transactions to find the one with the highest gross earnings
-        for (Transaction transaction : transactionHistory) {
-            int currentGross = transaction.getTotal();
-            if (currentGross > highestGross) {
-                highestGrossingTransaction = transaction;
-                highestGross = currentGross;
-            }
-        }
-
-        return highestGrossingTransaction;
+        return transactionHistory.getFirst();
     }
 
     /**
@@ -206,21 +180,18 @@ public class TransactionHistory {
      * @return the average discount for the product, in cents (with decimals).
      */
     public double getAverageProductDiscount(Barcode type) {
+        long totalDiscount = transactionHistory.stream()
+                .filter(transaction -> transaction instanceof SpecialSaleTransaction)
+                .flatMapToLong(transaction -> LongStream
+                        .of(((SpecialSaleTransaction) transaction)
+                                .getDiscountAmount(type)))
+                .sum();
+
         int totalProductsSold = getTotalProductsSold(type);
+
         if (totalProductsSold == 0) {
             return 0.0;
         }
-
-        int totalDiscount = transactionHistory.stream()
-                .filter(transaction -> transaction instanceof SpecialSaleTransaction)
-                .flatMap(transaction -> ((CategorisedTransaction) transaction)
-                        .getPurchasesByType().entrySet().stream())
-                .filter(entry -> entry.getKey().equals(type))
-                .mapToInt(entry -> entry.getValue().stream()
-                        .mapToInt(product -> product.getBarcode()
-                                .getBasePrice() - product.getBasePrice())
-                        .sum())
-                .sum();
 
         return (double) totalDiscount / totalProductsSold;
     }

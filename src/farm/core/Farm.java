@@ -2,7 +2,6 @@ package farm.core;
 
 import farm.customer.AddressBook;
 import farm.customer.Customer;
-import farm.inventory.BasicInventory;
 import farm.inventory.Inventory;
 import farm.inventory.product.*;
 import farm.inventory.product.data.Quality;
@@ -83,6 +82,12 @@ public class Farm {
      * @throws DuplicateCustomerException If the address book already contains this customer.
      */
     public void saveCustomer(Customer customer) throws DuplicateCustomerException {
+        // Check if the customer already exists in the address book
+        if (addressBook.containsCustomer(customer)) {
+            throw new DuplicateCustomerException("Customer already exists in the address book.");
+        }
+
+        // Add the customer to the address book
         addressBook.addCustomer(customer);
     }
 
@@ -107,13 +112,6 @@ public class Farm {
      */
     public void stockProduct(
             Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException {
-        if (quantity < 1) {
-            throw new IllegalArgumentException("Quantity must be at least 1.");
-        }
-        if (inventory instanceof BasicInventory && quantity > 1) {
-            throw new InvalidStockRequestException(
-                    "Basic inventory does not support adding more than one product at a time.");
-        }
         inventory.addProduct(barcode, quality, quantity);
     }
 
@@ -124,7 +122,8 @@ public class Farm {
      * @throws FailedTransactionException If the transaction manager rejects the request to begin managing this transaction.
      * @requires The customer associated with the transaction exists in the farm's address book.
      */
-    public void startTransaction(Transaction transaction) throws FailedTransactionException {
+    public void startTransaction(Transaction transaction) throws
+            FailedTransactionException {
         // Check if the customer associated with the transaction exists in the address book
         if (!addressBook.containsCustomer(transaction.getAssociatedCustomer())) {
             throw new FailedTransactionException(
@@ -144,31 +143,14 @@ public class Farm {
      * @return The number of products successfully added to the cart (0 or 1).
      * @throws FailedTransactionException If no transaction is ongoing.
      */
-    public int addToCart(Barcode barcode) throws FailedTransactionException {
-        // Check if a transaction is ongoing
-        if (!transactionManager.hasOngoingTransaction()) {
-            throw new FailedTransactionException(
-                    "Cannot add to cart when no customer has started shopping.");
-        }
-
+    public int addToCart(Barcode barcode) throws
+            FailedTransactionException {
         // Check if the product exists in the inventory
         if (!inventory.existsProduct(barcode)) {
             return 0;  // No product of this type exists in the inventory
         }
 
-        // Remove the product from inventory
-        List<Product> removedProducts = inventory.removeProduct(barcode);
-        if (removedProducts.isEmpty()) {
-            return 0;  // No product was removed, so nothing was added to the cart
-        }
-
-        Product product = switch (barcode) {
-            case EGG -> new Egg();
-            case MILK -> new Milk();
-            case JAM -> new Jam();
-            case WOOL -> new Wool();
-            default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
-        };
+        Product product = findProduct(barcode, Quality.REGULAR);
 
         // Add the product to the customer's cart via the transaction manager
         transactionManager.registerPendingPurchase(product);
@@ -185,37 +167,27 @@ public class Farm {
      * @throws FailedTransactionException If no transaction is ongoing or if the quantity is invalid.
      * @throws IllegalArgumentException If quantity is less than 1.
      */
-    public int addToCart(Barcode barcode, int quantity) throws FailedTransactionException {
+    public int addToCart(Barcode barcode, int quantity) throws
+            FailedTransactionException {
+        // Check if the product exists in the inventory
+        if (!inventory.existsProduct(barcode)) {
+            return 0;  // No product of this type exists in the inventory
+        }
+
         // Validate the quantity
         if (quantity < 1) {
             throw new IllegalArgumentException("Quantity must be at least 1.");
         }
 
-        // Check if there is an ongoing transaction
-        if (!transactionManager.hasOngoingTransaction()) {
-            throw new FailedTransactionException(
-                    "Cannot add to cart when no customer has started shopping.");
+        // Attempt to add products to the cart one by one up to the quantity specified
+        for (int i = 0; i < quantity; i++) {
+            Product product = findProduct(barcode, Quality.REGULAR);
+
+            // Add the product to the customer's cart via the transaction manager
+            transactionManager.registerPendingPurchase(product);
         }
 
-        int productsAdded = 0;
-
-        try {
-            // Attempt to add products to the cart one by one up to the quantity specified
-            for (int i = 0; i < quantity; i++) {
-                List<Product> removedProducts = inventory.removeProduct(barcode, 1);
-                if (!removedProducts.isEmpty()) {
-                    transactionManager.registerPendingPurchase(removedProducts.getFirst());
-                    productsAdded++;
-                } else {
-                    break; // Stop if the inventory runs out of the product
-                }
-            }
-        } catch (Exception e) {
-            throw new FailedTransactionException(
-                    "Failed to add products to cart: " + e.getMessage());
-        }
-
-        return productsAdded; // Return the number of products successfully added to the cart
+        return 1; // Return the number of products successfully added to the cart
     }
 
     /**
@@ -242,6 +214,17 @@ public class Farm {
 
         // If the transaction was empty, return false
         return false;
+    }
+
+    private Product findProduct(Barcode barcode, Quality quality) {
+        // Create an instance of the product based on the barcode
+        return switch (barcode) {
+            case EGG -> new Egg(quality);
+            case MILK -> new Milk(quality);
+            case JAM -> new Jam(quality);
+            case WOOL -> new Wool(quality);
+            default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
+        };
     }
 
     /**
@@ -273,7 +256,17 @@ public class Farm {
      * @throws CustomerNotFoundException If no customer with the given name and phone number exists in the address book.
      */
     public Customer getCustomer(String name, int phoneNumber) throws CustomerNotFoundException {
-        return addressBook.getCustomer(name, phoneNumber);
+        // Search for the customer in the address book
+        Customer customer = addressBook.getCustomer(name, phoneNumber);
+
+        // Check if the customer was found
+        if (customer == null) {
+            throw new CustomerNotFoundException(
+                    "No customer found with name: " + name + " and phone number: " + phoneNumber);
+        }
+
+        // Return the found customer
+        return customer;
     }
 
 
