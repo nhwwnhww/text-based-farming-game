@@ -1,6 +1,7 @@
 package farm.sales.transaction;
 
 import farm.customer.Customer;
+import farm.inventory.Inventory;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Barcode;
 import farm.sales.ReceiptPrinter;
@@ -12,7 +13,7 @@ import java.util.stream.Collectors;
  * Represents a special sale transaction where discounts are applied to certain products.
  */
 public class SpecialSaleTransaction extends CategorisedTransaction {
-    private final Map<Barcode, Integer> discountMap;
+    private static Map<Barcode, Integer> discountMap = Map.of();
 
     /**
      * Constructs a new SpecialSaleTransaction associated with the specified customer.
@@ -22,7 +23,7 @@ public class SpecialSaleTransaction extends CategorisedTransaction {
      */
     public SpecialSaleTransaction(Customer customer) {
         super(customer);
-        this.discountMap = new HashMap<>();
+        discountMap = new HashMap<>();
     }
 
     /**
@@ -33,7 +34,7 @@ public class SpecialSaleTransaction extends CategorisedTransaction {
      */
     public SpecialSaleTransaction(Customer customer, Map<Barcode, Integer> discountMap) {
         super(customer);
-        this.discountMap = new HashMap<>(discountMap);
+        SpecialSaleTransaction.discountMap = new HashMap<>(discountMap);
     }
 
     /**
@@ -150,51 +151,103 @@ public class SpecialSaleTransaction extends CategorisedTransaction {
             return ReceiptPrinter.createActiveReceipt();
         }
 
-        List<String> headings = List.of("Item", "Qty", "Price (ea.)", "Subtotal");
+        // Generate the receipt string
+        String receipt;
+
+        // Create the list of entries
         List<List<String>> entries = new ArrayList<>();
 
-        for (Barcode barcode : Barcode.values()) {
-            List<Product> products = getPurchasesByType().get(barcode);
-            if (products != null && !products.isEmpty()) {
-                int quantity = products.size();
-                int pricePerItem = products.getFirst().getBasePrice();
-                int subtotal = getPurchaseSubtotal(barcode);
-                int discountAmount = getDiscountAmount(barcode);
+        // Define the headings
+        List<String> headings = List.of("Item", "Qty", "Price (ea.)", "Subtotal");
 
-                String itemName = barcode.getDisplayName().toLowerCase();
-                String qtyString = String.valueOf(quantity);
-                String priceString = String.format("$%.2f", pricePerItem / 100.0);
-                String subtotalString = String.format("$%.2f", subtotal / 100.0);
+        List<Barcode> sortedBarcode = new ArrayList<>(getPurchasedTypes());
+        List<Barcode> predefinedOrder = Arrays.asList(Barcode.values());
 
-                // Regular entry for item
-                entries.add(List.of(itemName, qtyString, priceString, subtotalString));
+        sortedBarcode.sort(Comparator.comparingInt(predefinedOrder::indexOf));
 
-                // Add a discount message in the same format as other entries
-                if (discountAmount > 0) {
-                    String discountMsg = String.format(
-                            "Discount applied! %d%% off %s", discountAmount, itemName);
-                    // Creating an entry with the discount message aligned properly
-                    entries.add(List.of(discountMsg));
-                }
+        for (Barcode barcode : sortedBarcode) {
+            int quantity = getPurchaseQuantity(barcode);
+            int pricePerItem = barcode.getBasePrice();
+            int subtotal = getPurchaseSubtotal(barcode);
+            int discountAmount = getDiscountAmount(barcode);
+
+            String itemName = barcode.getDisplayName().toLowerCase();
+            String qtyString = String.valueOf(quantity);
+            String priceString = String.format("$%.2f", pricePerItem / 100.0);
+            String subtotalString = String.format("$%.2f", subtotal / 100.0);
+
+            List<String> line = List.of(itemName, qtyString, priceString, subtotalString);
+            entries.add(line);
+
+            if (discountAmount > 0) {
+                discountMap.put(barcode, discountAmount);
             }
+
         }
 
         String total = String.format("$%.2f", getTotal() / 100.0);
         String customerName = getAssociatedCustomer().getName();
 
-        // Generate the receipt string
-        String receipt = ReceiptPrinter.createReceipt(headings, entries, total, customerName);
-
         // Add total savings at the bottom of the receipt
         if (getTotalSaved() > 0) {
             String totalSaved = String.format(
                     "$%.2f", getTotalSaved() / 100.0);
-            // Generate the receipt string (include totalSaved version)
-            receipt = ReceiptPrinter.createReceipt(
-                    headings, entries, total, customerName, totalSaved);
+
+            List<String> listReceipt = buildPurchasesSectionEntries(
+                            generateReceiptLines(
+                                    headings, entries, total, customerName, totalSaved));
+
+            StringBuilder sb = new StringBuilder();
+            for (String string : listReceipt) {
+                sb.append(string).append("\n");
+            }
+            receipt = sb.toString();
+        } else {
+            receipt = ReceiptPrinter.createReceipt(headings, entries, total, customerName);
         }
 
         return receipt;
     }
+
+    private List<String> generateReceiptLines(
+            List<String> headings,
+            List<List<String>> entries,
+            String total, String customerName, String totalSaved) {
+        String fullReceipt = ReceiptPrinter.createReceipt(
+                headings, entries, total, customerName, totalSaved);
+        return Arrays.asList(fullReceipt.split("\n"));
+    }
+
+    private static List<String> buildPurchasesSectionEntries(
+            List<String> lines) {
+        // Create a set of valid Barcode names for quick lookup
+        Set<String> validBarcodeNames = Arrays.stream(Barcode.values())
+                .map(Enum::name)
+                .collect(Collectors.toSet());
+
+        List<String> updatedLines = new ArrayList<>(lines);
+
+        int index = 1;
+        for (String entry : lines) {
+            String[] itemSplit = entry.split(" ");
+            String item = itemSplit[0].toUpperCase(); // Convert to upper case for matching
+
+            if (validBarcodeNames.contains(item)) {
+                Barcode barcode = Barcode.valueOf(item);
+                if (discountMap.containsKey(barcode) && discountMap.get(barcode) != 0) {
+                    String discountMessage = String.format(
+                            "Discount applied! %d%% off %s",
+                            discountMap.get(barcode), item.toLowerCase());
+                    updatedLines.add(index, discountMessage);
+                    index++;
+                }
+            }
+            index++;
+        }
+        return updatedLines;
+
+
+        }
+
 }
 
