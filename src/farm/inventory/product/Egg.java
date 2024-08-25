@@ -11,17 +11,17 @@ public class Egg extends Product {
     private static final Barcode barcode = Barcode.EGG;
 
     /**
-     * Constructs a new Egg product with the specified barcode and quality.
-     */
-    public Egg(Quality quality) {
-        super(barcode, quality != null ? quality : Quality.REGULAR);
-    }
-
-    /**
      * Constructs a new Egg product with the specified quality.
      * If no quality is provided, it defaults to regular quality.
      */
     public Egg() {
         super(barcode, Quality.REGULAR);
+    }
+
+    /**
+     * Constructs a new Egg product with the specified barcode and quality.
+     */
+    public Egg(Quality quality) {
+        super(barcode, quality != null ? quality : Quality.REGULAR);
     }
 }

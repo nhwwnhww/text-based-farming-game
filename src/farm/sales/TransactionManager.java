@@ -108,7 +108,7 @@ public class TransactionManager {
             throw new FailedTransactionException("No ongoing transaction to close.");
         }
         Transaction transactionToClose = ongoingTransaction;
-        ongoingTransaction = null;
+        this.ongoingTransaction = null;
         transactionToClose.finalise();
         return transactionToClose;
     }

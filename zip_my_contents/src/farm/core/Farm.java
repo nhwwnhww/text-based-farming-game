@@ -2,6 +2,7 @@ package farm.core;
 
 import farm.customer.AddressBook;
 import farm.customer.Customer;
+import farm.inventory.FancyInventory;
 import farm.inventory.Inventory;
 import farm.inventory.product.*;
 import farm.inventory.product.data.Quality;
@@ -112,6 +113,16 @@ public class Farm {
      */
     public void stockProduct(
             Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException {
+        if (quantity < 1) {
+            throw new InvalidStockRequestException("Quantity must be at least 1.");
+        }
+
+        if (!(inventory instanceof FancyInventory) && quantity > 1) {
+            throw new IllegalArgumentException("Current inventory is not fancy enough. "
+                    +
+                    "Please purchase products one at a time.");
+        }
+
         inventory.addProduct(barcode, quality, quantity);
     }
 
@@ -124,6 +135,7 @@ public class Farm {
      */
     public void startTransaction(Transaction transaction) throws
             FailedTransactionException {
+
         // Check if the customer associated with the transaction exists in the address book
         if (!addressBook.containsCustomer(transaction.getAssociatedCustomer())) {
             throw new FailedTransactionException(
@@ -147,13 +159,15 @@ public class Farm {
             FailedTransactionException {
         // Check if the product exists in the inventory
         if (!inventory.existsProduct(barcode)) {
-            return 0;  // No product of this type exists in the inventory
+            return 0;
         }
 
-        Product product = findProduct(barcode, Quality.REGULAR);
+        List<Product> getProducts = inventory.removeProduct(barcode);
 
-        // Add the product to the customer's cart via the transaction manager
-        transactionManager.registerPendingPurchase(product);
+        if (!getProducts.isEmpty()) {
+            // Add the product to the customer's cart via the transaction manager
+            transactionManager.registerPendingPurchase(getProducts.getFirst());
+        }
 
         return 1;  // Successfully added one product to the cart
     }
@@ -169,25 +183,33 @@ public class Farm {
      */
     public int addToCart(Barcode barcode, int quantity) throws
             FailedTransactionException {
-        // Check if the product exists in the inventory
-        if (!inventory.existsProduct(barcode)) {
-            return 0;  // No product of this type exists in the inventory
+
+        if (!transactionManager.hasOngoingTransaction()) {
+            throw new FailedTransactionException(
+                    "Cannot add to cart when no customer has started shopping.");
         }
 
-        // Validate the quantity
         if (quantity < 1) {
             throw new IllegalArgumentException("Quantity must be at least 1.");
         }
 
-        // Attempt to add products to the cart one by one up to the quantity specified
-        for (int i = 0; i < quantity; i++) {
-            Product product = findProduct(barcode, Quality.REGULAR);
+        // Check if the inventory is not FancyInventory and the quantity is greater than 1
+        if (!(inventory instanceof FancyInventory) && quantity > 1) {
+            throw new FailedTransactionException(
+                    "Current inventory is not fancy enough. "
+                            +
+                            "Please purchase products one at a time.");
+        }
+        List<Product> getProducts = inventory.removeProduct(barcode, quantity);
 
+        if (!getProducts.isEmpty()) {
             // Add the product to the customer's cart via the transaction manager
-            transactionManager.registerPendingPurchase(product);
+            for (Product product : getProducts) {
+                transactionManager.registerPendingPurchase(product);
+            }
         }
 
-        return 1; // Return the number of products successfully added to the cart
+        return getProducts.size(); // Return the number of products successfully added to the cart
     }
 
     /**
@@ -214,17 +236,6 @@ public class Farm {
 
         // If the transaction was empty, return false
         return false;
-    }
-
-    private Product findProduct(Barcode barcode, Quality quality) {
-        // Create an instance of the product based on the barcode
-        return switch (barcode) {
-            case EGG -> new Egg(quality);
-            case MILK -> new Milk(quality);
-            case JAM -> new Jam(quality);
-            case WOOL -> new Wool(quality);
-            default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
-        };
     }
 
     /**
@@ -268,12 +279,5 @@ public class Farm {
         // Return the found customer
         return customer;
     }
-
-
-
-
-
-
-
 
 }

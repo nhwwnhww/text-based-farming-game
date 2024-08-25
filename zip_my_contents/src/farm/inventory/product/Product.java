@@ -9,17 +9,11 @@ import java.util.Objects;
  * Represents an abstract product in the inventory system.
  * This class should be extended by specific product types.
  */
-public class Product {
+public abstract class Product {
     private final Barcode barcode;
     private final Quality quality;
 
-    /**
-     * Constructs a new Product with the specified barcode and quality.
-     *
-     * @param barcode The barcode associated with the product.
-     * @param quality The quality of the product.
-     */
-    public Product(Barcode barcode, Quality quality) {
+    protected Product(Barcode barcode, Quality quality) {
         this.barcode = barcode;
         this.quality = quality;
     }

@@ -75,8 +75,8 @@ public class Main {
         boolean fancy = false;
 
         // Keep removed for Stage 2 but add when Stage 3 is done
-        //inventory = new FancyInventory();
-        //fancy = true;
+        inventory = new FancyInventory();
+        fancy = true;
 
         for (Barcode barcode : List.of(Barcode.MILK, Barcode.EGG, Barcode.WOOL, Barcode.EGG)) {
             for (Quality quality : List.of(Quality.REGULAR, Quality.SILVER, Quality.REGULAR,

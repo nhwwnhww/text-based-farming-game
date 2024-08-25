@@ -6,9 +6,7 @@ import farm.inventory.product.data.Quality;
 import farm.core.InvalidStockRequestException;
 import farm.core.FailedTransactionException;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * A FancyInventory implementation that supports bulk operations and advanced features.
@@ -17,13 +15,13 @@ import java.util.List;
  */
 public class FancyInventory implements Inventory {
 
-    private final List<Product> products;
+    private static List<Product> products;
 
     /**
      * Constructs an empty FancyInventory.
      */
     public FancyInventory() {
-        this.products = new ArrayList<>();
+        products = new ArrayList<>();
     }
 
     /**
@@ -58,6 +56,10 @@ public class FancyInventory implements Inventory {
         if (quantity < 1) {
             throw new InvalidStockRequestException("Quantity must be at least 1.");
         }
+        // Ensure the inventory has enough stock
+        if (getStockedQuantity(barcode) < quantity) {
+            quantity =  getStockedQuantity(barcode);
+        }
         for (int i = 0; i < quantity; i++) {
             addProduct(barcode, quality);
         }
@@ -75,16 +77,6 @@ public class FancyInventory implements Inventory {
     }
 
     /**
-     * Retrieves the full stock currently held in the inventory.
-     *
-     * @return A list containing all products currently stored in the inventory.
-     */
-    @Override
-    public List<Product> getAllProducts() {
-        return new ArrayList<>(products);
-    }
-
-    /**
      * Removes the highest quality product with the corresponding barcode from the inventory.
      * The product with the highest quality is prioritized for removal.
      *
@@ -94,13 +86,19 @@ public class FancyInventory implements Inventory {
     @Override
     public List<Product> removeProduct(Barcode barcode) {
         List<Product> removedProducts = new ArrayList<>();
-        products.stream()
+
+        Map<Quality, Integer> qualityOrderMap = getQualityOrderMap();
+
+        Optional<Product> productToRemove = products.stream()
                 .filter(product -> product.getBarcode().equals(barcode))
-                .max(Comparator.comparing(Product::getQuality))
-                .ifPresent(product -> {
-                    removedProducts.add(product);
-                    products.remove(product);
-                });
+                .max(Comparator.comparing((Product product) ->
+                        qualityOrderMap.get(product.getQuality())));
+
+        productToRemove.ifPresent(product -> {
+            removedProducts.add(product);   // Add the product to the list of removed list
+            products.remove(product);       // Remove the product from the inventory
+        });
+
         return removedProducts;
     }
 
@@ -121,11 +119,18 @@ public class FancyInventory implements Inventory {
         if (quantity < 1) {
             throw new FailedTransactionException("Quantity must be at least 1.");
         }
+
         List<Product> removedProducts = new ArrayList<>();
+
+        // Ensure the inventory has enough stock
+        if (getStockedQuantity(barcode) < quantity) {
+            quantity =  getStockedQuantity(barcode);
+        }
+
         for (int i = 0; i < quantity; i++) {
             List<Product> productList = removeProduct(barcode);
-            if (productList.isEmpty()) {
-                break;
+            if (!existsProduct(barcode)) {
+                break; // No more products to remove
             }
             removedProducts.addAll(productList);
         }
@@ -133,14 +138,52 @@ public class FancyInventory implements Inventory {
     }
 
     /**
+     * Retrieves the full stock currently held in the inventory.
+     *
+     * @return A list containing all products currently stored in the inventory.
+     */
+    @Override
+    public List<Product> getAllProducts() {
+        // Create a new list from the products to avoid modifying the original list
+        List<Product> sortedProducts = new ArrayList<>(products);
+
+        Map<Barcode, Integer> barcodeOrderMap = getBarcodeOrderMap();
+
+        // Sort the products based on the order defined in the Barcode enum
+        sortedProducts.sort(Comparator.comparing(
+                product -> barcodeOrderMap.get(product.getBarcode())));
+
+        return sortedProducts;
+    }
+
+    /**
      * Get the quantity of a specific product in the inventory.
      *
-     * @param barcode The barcode of the product.
      * @return The total quantity of the specified product in the inventory.
      */
     public int getStockedQuantity(Barcode barcode) {
         return (int) products.stream()
                 .filter(product -> product.getBarcode().equals(barcode))
                 .count();
+    }
+
+    private Map<Barcode, Integer> getBarcodeOrderMap() {
+        // Create a map of Barcode to its ordinal position
+        Map<Barcode, Integer> barcodeOrderMap = new HashMap<>();
+        Barcode[] barcodes = Barcode.values();
+        for (int i = 0; i < barcodes.length; i++) {
+            barcodeOrderMap.put(barcodes[i], i);
+        }
+        return barcodeOrderMap;
+    }
+
+    private Map<Quality, Integer> getQualityOrderMap() {
+        // Create a map of Barcode to its ordinal position
+        Map<Quality, Integer> qualityOrderMap = new HashMap<>();
+        Quality[] qualities = Quality.values();
+        for (int i = 0; i < qualities.length; i++) {
+            qualityOrderMap.put(qualities[i], i);
+        }
+        return qualityOrderMap;
     }
 }

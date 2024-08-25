@@ -34,7 +34,8 @@ public interface Inventory {
      * @param quantity the amount of the product to add.
      * @throws InvalidStockRequestException if the implementing inventory does not support adding multiple products at once.
      */
-    void addProduct(Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException;
+    void addProduct(Barcode barcode, Quality quality, int quantity)
+            throws InvalidStockRequestException;
 
     /**
      * Determines if a product with the given barcode exists in the inventory.

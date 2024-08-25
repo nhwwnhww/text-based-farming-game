@@ -1,7 +1,6 @@
 package farm.sales.transaction;
 
 import farm.customer.Customer;
-import farm.inventory.Inventory;
 import farm.inventory.product.Product;
 import farm.inventory.product.data.Barcode;
 import farm.sales.ReceiptPrinter;
@@ -247,7 +246,7 @@ public class SpecialSaleTransaction extends CategorisedTransaction {
         return updatedLines;
 
 
-        }
+    }
 
 }
 

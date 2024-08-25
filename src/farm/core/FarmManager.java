@@ -85,7 +85,6 @@ public class FarmManager {
      */
     protected void addToInventory(String productName) {
         try {
-
             Barcode barcode = Barcode.valueOf(productName.toUpperCase());
             farm.stockProduct(barcode, Quality.REGULAR);
             shop.displayProductAddSuccess();
@@ -194,8 +193,8 @@ public class FarmManager {
 
             // Start the transaction and handle potential failures
             try {
-                farm.getTransactionManager().setOngoingTransaction(transaction);
                 shop.displayTransactionStart();
+                farm.startTransaction(transaction);
             } catch (FailedTransactionException e) {
                 shop.displayFailedToCreateTransaction();
             }

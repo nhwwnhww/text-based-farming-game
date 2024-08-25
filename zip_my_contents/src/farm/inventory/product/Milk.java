@@ -11,18 +11,20 @@ public class Milk extends Product {
     private static final Barcode barcode = Barcode.MILK;
 
     /**
-     * Constructs a new Egg product with the specified barcode and quality.
-     */
-    public Milk(Quality quality) {
-        super(barcode, quality != null ? quality : Quality.REGULAR);
-    }
-
-    /**
      * Constructs a new Egg product with the specified quality.
      * If no quality is provided, it defaults to regular quality.
      */
     public Milk() {
         super(barcode, Quality.REGULAR);
     }
+
+    /**
+     * Constructs a new Egg product with the specified barcode and quality.
+     */
+    public Milk(Quality quality) {
+        super(barcode, quality != null ? quality : Quality.REGULAR);
+    }
+
+
 
 }

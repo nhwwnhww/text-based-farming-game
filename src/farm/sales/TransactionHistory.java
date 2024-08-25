@@ -1,5 +1,6 @@
 package farm.sales;
 
+import farm.inventory.product.Product;
 import farm.sales.transaction.CategorisedTransaction;
 import farm.sales.transaction.SpecialSaleTransaction;
 import farm.sales.transaction.Transaction;
@@ -65,7 +66,9 @@ public class TransactionHistory {
      * @return the gross earnings from all transactions in history, in cents.
      */
     public int getGrossEarnings() {
-        return getTotalProductsSold();
+        return transactionHistory.stream()
+                .mapToInt(Transaction::getTotal)
+                .sum();
     }
 
     /**
@@ -79,7 +82,11 @@ public class TransactionHistory {
      * @return the gross earnings from all sales of the product type, in cents.
      */
     public int getGrossEarnings(Barcode type) {
-        return getTotalProductsSold(type);
+        return transactionHistory.stream()
+                .flatMap(t -> t.getPurchases().stream())
+                .filter(product -> product.getBarcode().equals(type))
+                .mapToInt(Product::getBasePrice)
+                .sum();
     }
 
     /**
@@ -97,9 +104,8 @@ public class TransactionHistory {
      * @return the total number of products sold.
      */
     public int getTotalProductsSold() {
-        return transactionHistory
-                .stream()
-                .mapToInt(Transaction::getTotal) //getTotalProducts
+        return transactionHistory.stream()
+                .mapToInt(t -> t.getPurchases().size())
                 .sum();
     }
 
@@ -111,9 +117,9 @@ public class TransactionHistory {
      */
     public int getTotalProductsSold(Barcode type) {
         return transactionHistory.stream()
-                .filter(transaction -> transaction instanceof CategorisedTransaction)
-                .mapToInt(transaction -> ((CategorisedTransaction) transaction)
-                        .getPurchaseQuantity(type))
+                .flatMap(t -> t.getPurchases().stream())
+                .filter(product -> product.getBarcode().equals(type))
+                .mapToInt(product -> 1)
                 .sum();
     }
 

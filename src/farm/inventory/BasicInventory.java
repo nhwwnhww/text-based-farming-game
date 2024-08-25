@@ -40,7 +40,7 @@ public class BasicInventory implements Inventory {
             case WOOL -> new Wool(quality);
             default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
         };
-        products.add(product);
+        this.products.add(product);
     }
 
     /**
@@ -55,6 +55,11 @@ public class BasicInventory implements Inventory {
     public void addProduct(Barcode barcode,
                            Quality quality,
                            int quantity) throws InvalidStockRequestException {
+
+        if (quantity < 1) {
+            throw new InvalidStockRequestException("Quantity must be at least 1.");
+        }
+
         if (quantity > 1) {
             throw new InvalidStockRequestException(
                     "Current inventory is not fancy enough. Please supply products one at a time.");
