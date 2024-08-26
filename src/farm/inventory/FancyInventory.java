@@ -54,7 +54,7 @@ public class FancyInventory implements Inventory {
     public void addProduct(
             Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException {
         if (quantity < 1) {
-            throw new InvalidStockRequestException("Quantity must be at least 1.");
+            throw new IllegalArgumentException("Quantity must be at least 1.");
         }
 
         for (int i = 0; i < quantity; i++) {
@@ -113,6 +113,7 @@ public class FancyInventory implements Inventory {
     @Override
     public List<Product> removeProduct(
             Barcode barcode, int quantity) throws FailedTransactionException {
+
         if (quantity < 1) {
             throw new FailedTransactionException("Quantity must be at least 1.");
         }

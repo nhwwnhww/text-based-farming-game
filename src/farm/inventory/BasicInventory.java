@@ -57,7 +57,7 @@ public class BasicInventory implements Inventory {
                            int quantity) throws InvalidStockRequestException {
 
         if (quantity < 1) {
-            throw new InvalidStockRequestException("Quantity must be at least 1.");
+            throw new IllegalArgumentException("Quantity must be at least 1.");
         }
 
         if (quantity > 1) {

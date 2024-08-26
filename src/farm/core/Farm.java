@@ -113,11 +113,9 @@ public class Farm {
      */
     public void stockProduct(
             Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException {
-
         if (quantity < 1) {
             throw new IllegalArgumentException("Quantity must be at least 1.");
         }
-
         this.inventory.addProduct(barcode, quality, quantity);
     }
 
