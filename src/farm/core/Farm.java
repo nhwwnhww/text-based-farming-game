@@ -114,9 +114,8 @@ public class Farm {
     public void stockProduct(
             Barcode barcode, Quality quality, int quantity) throws InvalidStockRequestException {
         if (quantity < 1) {
-            throw new InvalidStockRequestException("Quantity must be at least 1.");
+            throw new IllegalArgumentException("Quantity must be at least 1.");
         }
-
         this.inventory.addProduct(barcode, quality, quantity);
     }
 
@@ -129,14 +128,6 @@ public class Farm {
      */
     public void startTransaction(Transaction transaction) throws
             FailedTransactionException {
-
-        // Check if the customer associated with the transaction exists in the address book
-        if (!addressBook.containsCustomer(transaction.getAssociatedCustomer())) {
-            throw new FailedTransactionException(
-                    "Current inventory is not fancy enough."
-                            +
-                            " Please purchase products one at a time.");
-        }
 
         // Set the transaction as the ongoing transaction in the transaction manager
         transactionManager.setOngoingTransaction(transaction);
@@ -151,6 +142,12 @@ public class Farm {
      */
     public int addToCart(Barcode barcode) throws
             FailedTransactionException {
+
+        if (!transactionManager.hasOngoingTransaction()) {
+            throw new FailedTransactionException(
+                    "Cannot add to cart when no customer has started shopping.");
+        }
+
         // Check if the product exists in the inventory
         if (!inventory.existsProduct(barcode)) {
             return 0;
@@ -188,7 +185,7 @@ public class Farm {
         }
 
         // Check if the inventory is not FancyInventory and the quantity is greater than 1
-        if (!(inventory instanceof FancyInventory) && quantity > 1) {
+        if (!(inventory instanceof FancyInventory) && quantity == 1) {
             throw new FailedTransactionException(
                     "Current inventory is not fancy enough. "
                             +

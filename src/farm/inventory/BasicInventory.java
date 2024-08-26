@@ -16,13 +16,13 @@ import java.util.List;
  */
 public class BasicInventory implements Inventory {
 
-    private final List<Product> products;
+    private final List<Product> inventory;
 
     /**
      * Constructs a new BasicInventory instance with an empty product list.
      */
     public BasicInventory() {
-        this.products = new ArrayList<>();
+        this.inventory = new ArrayList<>();
     }
 
     /**
@@ -40,7 +40,7 @@ public class BasicInventory implements Inventory {
             case WOOL -> new Wool(quality);
             default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
         };
-        this.products.add(product);
+        this.inventory.add(product);
     }
 
     /**
@@ -57,7 +57,7 @@ public class BasicInventory implements Inventory {
                            int quantity) throws InvalidStockRequestException {
 
         if (quantity < 1) {
-            throw new InvalidStockRequestException("Quantity must be at least 1.");
+            throw new IllegalArgumentException("Quantity must be at least 1.");
         }
 
         if (quantity > 1) {
@@ -75,7 +75,7 @@ public class BasicInventory implements Inventory {
      */
     @Override
     public boolean existsProduct(Barcode barcode) {
-        return products.stream().anyMatch(product -> product.getBarcode().equals(barcode));
+        return inventory.stream().anyMatch(product -> product.getBarcode().equals(barcode));
     }
 
     /**
@@ -85,7 +85,7 @@ public class BasicInventory implements Inventory {
      */
     @Override
     public List<Product> getAllProducts() {
-        return new ArrayList<>(products);
+        return new ArrayList<>(inventory);
     }
 
     /**
@@ -97,10 +97,10 @@ public class BasicInventory implements Inventory {
     @Override
     public List<Product> removeProduct(Barcode barcode) {
         List<Product> removedProducts = new ArrayList<>();
-        for (Product product : products) {
+        for (Product product : inventory) {
             if (product.getBarcode().equals(barcode)) {
                 removedProducts.add(product);
-                products.remove(product);
+                inventory.remove(product);
                 break; // Remove only the first matching product
             }
         }
@@ -118,6 +118,7 @@ public class BasicInventory implements Inventory {
     @Override
     public List<Product> removeProduct(
             Barcode barcode, int quantity) throws FailedTransactionException {
+
         if (quantity > 1) {
             throw new FailedTransactionException(
                     "Current inventory is not fancy enough."
