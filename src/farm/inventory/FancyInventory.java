@@ -37,7 +37,7 @@ public class FancyInventory implements Inventory {
             case MILK -> new Milk(quality);
             case JAM -> new Jam(quality);
             case WOOL -> new Wool(quality);
-            default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
+            default -> throw new IllegalArgumentException("IllegalArgument barcode: " + barcode);
         };
         products.add(product);
     }
@@ -76,6 +76,7 @@ public class FancyInventory implements Inventory {
     /**
      * Removes the highest quality product with the corresponding barcode from the inventory.
      * The product with the highest quality is prioritized for removal.
+     * used chatgpt to help
      *
      * @param barcode The barcode of the product to be removed.
      * @return A list containing the removed product if it exists, else an empty list.
@@ -151,6 +152,7 @@ public class FancyInventory implements Inventory {
 
     /**
      * Get the quantity of a specific product in the inventory.
+     * used chatgpt to help
      *
      * @return The total quantity of the specified product in the inventory.
      */

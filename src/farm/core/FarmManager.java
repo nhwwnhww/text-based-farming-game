@@ -107,11 +107,10 @@ public class FarmManager {
             farm.stockProduct(barcode, Quality.REGULAR, quantity);
             shop.displayProductAddSuccess();
         } catch (IllegalArgumentException e) {
-            shop.displayInvalidProductName();
-        } catch (Exception e) {
+            shop.displayProductAddFailed("Quantity must be at least 1.");
+        } catch (InvalidStockRequestException e) {
             shop.displayProductAddFailed(e.getMessage());
         }
-
     }
 
 

@@ -106,6 +106,7 @@ public class Transaction {
 
     /**
      * Returns a detailed receipt of the transaction.
+     * used chatgpt to help
      *
      * @return A string representing the receipt of the transaction.
      */

@@ -1,7 +1,6 @@
 package farm.sales;
 
 import farm.inventory.product.Product;
-import farm.sales.transaction.CategorisedTransaction;
 import farm.sales.transaction.SpecialSaleTransaction;
 import farm.sales.transaction.Transaction;
 import farm.inventory.product.data.Barcode;
@@ -78,6 +77,8 @@ public class TransactionHistory {
      *
      * <p>Note: returns the calculated total in integer cents.</p>
      *
+     * used chatgpt to help
+     *
      * @param type the Barcode of the item of interest.
      * @return the gross earnings from all sales of the product type, in cents.
      */
@@ -111,6 +112,7 @@ public class TransactionHistory {
 
     /**
      * Calculates the number of products sold of a particular type over all transactions.
+     * used chatgpt to help
      *
      * @param type the Barcode for the product of interest.
      * @return the total number of products sold, for that particular product.
@@ -140,6 +142,8 @@ public class TransactionHistory {
      * <p>If two products have sold the same quantity, resulting in a tie, return
      * the one appearing first in the Barcode enum.</p>
      *
+     * used chatgpt to help
+     *
      * @return the identifier for the product type of the most popular product.
      */
     public Barcode getMostPopularProduct() {
@@ -168,7 +172,7 @@ public class TransactionHistory {
             return 0.0;
         }
 
-        return (double) getGrossEarnings() / transactionHistory.size();
+        return (double) getGrossEarnings() / getTotalTransactionsMade();
     }
 
     /**
@@ -182,24 +186,28 @@ public class TransactionHistory {
      *
      * <p>If there have been no products sold, returns 0.0d.</p>
      *
+     * used chatgpt to help
+     *
      * @param type the identifier of the product of interest.
      * @return the average discount for the product, in cents (with decimals).
      */
     public double getAverageProductDiscount(Barcode type) {
-        long totalDiscount = transactionHistory.stream()
-                .filter(transaction -> transaction instanceof SpecialSaleTransaction)
-                .flatMapToLong(transaction -> LongStream
-                        .of(((SpecialSaleTransaction) transaction)
-                                .getDiscountAmount(type)))
-                .sum();
-
-        int totalProductsSold = getTotalProductsSold(type);
-
-        if (totalProductsSold == 0) {
-            return 0.0;
+        double totalDiscountPercentage = 0.0;
+        int productCount = 0;
+        // Calculate the total discount for the given product type across all transactions
+        for (Transaction transaction : transactionHistory) {
+            if (transaction instanceof SpecialSaleTransaction specialTransaction) {
+                for (Product product : transaction.getPurchases()) {
+                    if (product.getBarcode().equals(type)) {
+                        int discountPercentage = specialTransaction.getDiscountAmount(type);
+                        totalDiscountPercentage += discountPercentage;
+                        productCount++;
+                    }
+                }
+            }
         }
-
-        return (double) totalDiscount / totalProductsSold;
+        // If no products were sold, return 0.0
+        return productCount > 0 ? totalDiscountPercentage / productCount : 0.0;
     }
 
 }

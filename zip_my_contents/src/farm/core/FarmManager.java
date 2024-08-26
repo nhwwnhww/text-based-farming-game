@@ -103,21 +103,14 @@ public class FarmManager {
      */
     protected void addToInventory(String productName, int quantity) {
         try {
-
-            if (quantity < 1) {
-                throw new IllegalArgumentException("Quantity must be at least 1.");
-            }
-
             Barcode barcode = Barcode.valueOf(productName.toUpperCase());
-            System.out.println(barcode);
             farm.stockProduct(barcode, Quality.REGULAR, quantity);
             shop.displayProductAddSuccess();
         } catch (IllegalArgumentException e) {
-            shop.displayInvalidProductName();
-        } catch (Exception e) {
+            shop.displayProductAddFailed("Quantity must be at least 1.");
+        } catch (InvalidStockRequestException e) {
             shop.displayProductAddFailed(e.getMessage());
         }
-
     }
 
 

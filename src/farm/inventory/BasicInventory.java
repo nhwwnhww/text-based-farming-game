@@ -27,6 +27,7 @@ public class BasicInventory implements Inventory {
 
     /**
      * Adds a new product with the given barcode and quality to the inventory.
+     * used chatgpt to help
      *
      * @param barcode the barcode of the product to add.
      * @param quality the quality of the product to add.
@@ -38,7 +39,7 @@ public class BasicInventory implements Inventory {
             case MILK -> new Milk(quality);
             case JAM -> new Jam(quality);
             case WOOL -> new Wool(quality);
-            default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
+            default -> throw new IllegalArgumentException("IllegalArgument barcode: " + barcode);
         };
         this.inventory.add(product);
     }
@@ -69,6 +70,7 @@ public class BasicInventory implements Inventory {
 
     /**
      * Determines if a product with the given barcode exists in the inventory.
+     * used chatgpt to help
      *
      * @param barcode the barcode of the product to check.
      * @return true if the product exists, false otherwise.

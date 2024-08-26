@@ -141,6 +141,7 @@ public class SpecialSaleTransaction extends CategorisedTransaction {
 
     /**
      * Converts the transaction into a formatted receipt for display, using the ReceiptPrinter.
+     * used chatgpt to help
      *
      * @return The styled receipt representation of this transaction.
      */
