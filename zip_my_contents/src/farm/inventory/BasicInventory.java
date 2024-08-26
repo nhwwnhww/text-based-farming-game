@@ -40,7 +40,7 @@ public class BasicInventory implements Inventory {
             case WOOL -> new Wool(quality);
             default -> throw new IllegalArgumentException("Unsupported product type: " + barcode);
         };
-        products.add(product);
+        this.products.add(product);
     }
 
     /**
@@ -118,6 +118,7 @@ public class BasicInventory implements Inventory {
     @Override
     public List<Product> removeProduct(
             Barcode barcode, int quantity) throws FailedTransactionException {
+
         if (quantity > 1) {
             throw new FailedTransactionException(
                     "Current inventory is not fancy enough."

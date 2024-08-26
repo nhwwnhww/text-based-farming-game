@@ -56,10 +56,7 @@ public class FancyInventory implements Inventory {
         if (quantity < 1) {
             throw new InvalidStockRequestException("Quantity must be at least 1.");
         }
-        // Ensure the inventory has enough stock
-        if (getStockedQuantity(barcode) < quantity) {
-            quantity =  getStockedQuantity(barcode);
-        }
+
         for (int i = 0; i < quantity; i++) {
             addProduct(barcode, quality);
         }
@@ -122,16 +119,11 @@ public class FancyInventory implements Inventory {
 
         List<Product> removedProducts = new ArrayList<>();
 
-        // Ensure the inventory has enough stock
-        if (getStockedQuantity(barcode) < quantity) {
-            quantity =  getStockedQuantity(barcode);
-        }
-
         for (int i = 0; i < quantity; i++) {
-            List<Product> productList = removeProduct(barcode);
             if (!existsProduct(barcode)) {
                 break; // No more products to remove
             }
+            List<Product> productList = removeProduct(barcode);
             removedProducts.addAll(productList);
         }
         return removedProducts;

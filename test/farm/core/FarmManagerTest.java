@@ -35,6 +35,7 @@ public class FarmManagerTest {
 
         // Add 2 eggs, 2 milk, and 2 jam to the inventory
         farmManager.addToInventory(EGG, 2);
+        System.out.println(inventory.getAllProducts());
         farmManager.addToInventory(MILK, 2);
         farmManager.addToInventory(JAM, 2);
 
@@ -47,8 +48,6 @@ public class FarmManagerTest {
                 new Milk(regularQuality), new Milk(regularQuality),
                 new Jam(regularQuality), new Jam(regularQuality)
         );
-
-        System.out.println(products);
 
         // Verify that each expected product is found in the actual products list
         for (Product expectedProduct : expectedProducts) {
